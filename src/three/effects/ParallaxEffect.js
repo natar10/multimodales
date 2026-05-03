@@ -24,19 +24,19 @@ export class ParallaxEffect {
         const clone = template.clone(true)
 
         // Evenly space angles around face, with slight randomness
-        const angle = (i / EYE_COUNT) * Math.PI * 2 + (Math.random() - 0.5) * 0.5
-        const radius = 2.2 + Math.random() * 3.2   // 2.2 – 5.4 world units from face
+        const angle = (i / EYE_COUNT) * Math.PI * 2 + (Math.random() - 0.5) * 0.9
+        const radius = 2.8 + Math.random() * 7.2   // 2.2 – 5.4 world units from face
 
         // Fixed orbit offset from face center (keeps eyes around the face)
         const orbitX = Math.cos(angle) * radius
-        const orbitY = Math.sin(angle) * radius * 0.65   // flatten slightly on Y
+        const orbitY = Math.sin(angle) * radius * 0.75   // flatten slightly on Y
 
         // Depth: spread ± relative to video plane
         const depthT = i / (EYE_COUNT - 1)   // deterministic spread 0→1
         const baseZ = PLANE_Z + (-2.0 + depthT * 3.5)   // -12 to -8.5
 
         // Scale: closer eyes are larger
-        const scale = 8 + depthT * 22   // 8 to 30
+        const scale = 15 + depthT * 42   // 8 to 30
 
         // Parallax factor: farther eyes move less, closer eyes move more
         const parallaxFactor = 1.0 + (baseZ - PLANE_Z) / 2.5
@@ -85,7 +85,7 @@ export class ParallaxEffect {
       eye.mesh.position.z = eye.baseZ
 
       // Slow spin for visual interest
-      eye.mesh.rotation.y += delta * 0.25
+      eye.mesh.rotation.y += delta * 0.85
     }
   }
 
