@@ -5,6 +5,7 @@ import { PortalEffect } from './effects/PortalEffect.js'
 import { BubblesEffect } from './effects/BubblesEffect.js'
 import { MirrorEffect } from './effects/MirrorEffect.js'
 import { SpiderSenseEffect } from './effects/SpiderSenseEffect.js'
+import { ParallaxEffect } from './effects/ParallaxEffect.js'
 
 export class SceneManager {
   constructor(containerElement, video) {
@@ -59,6 +60,7 @@ export class SceneManager {
     this.registerEffect('clap', new BubblesEffect())
     this.registerEffect('mirror', new MirrorEffect())
     this.registerEffect('spiderSense', new SpiderSenseEffect())
+    this.registerEffect('parallax', new ParallaxEffect())
 
     // Handle window resize
     window.addEventListener('resize', () => this.onWindowResize())
@@ -76,6 +78,8 @@ export class SceneManager {
   setSnapActive(active) {
     const effect = this.effects['snap']
     if (effect) effect.setActive(active)
+    const parallax = this.effects['parallax']
+    if (parallax) parallax.setActive(active)
   }
 
   setClapActive(active) {
