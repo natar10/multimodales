@@ -2,10 +2,11 @@ import { useEffect, useRef, useContext } from 'react'
 import { HandLandmarker, FilesetResolver } from '@mediapipe/tasks-vision'
 import { AppContext } from '../context/AppContext.jsx'
 import { snapDetector } from '../gestures/snapDetector.js'
+import { clapDetector } from '../gestures/clapDetector.js'
 
 export function useHandTracking(video) {
   const handLandmarkerRef = useRef(null)
-  const { handLandmarksRef, snapActive, setSnapActive } = useContext(AppContext)
+  const { handLandmarksRef, snapActive, setSnapActive, clapActive, setClapActive } = useContext(AppContext)
   const isInitializingRef = useRef(false)
 
   useEffect(() => {
@@ -38,16 +39,26 @@ export function useHandTracking(video) {
               const results = handLandmarkerRef.current.detectForVideo(video, Date.now())
               handLandmarksRef.current = results.landmarks
 
-              // Detect gestures from the primary hand (first hand if available)
+              // Detect gestures
               if (results.landmarks && results.landmarks.length > 0) {
                 const primaryHand = results.landmarks[0]
 
-                // Snap detection
+                // Snap detection (single hand)
                 const snapDetected = snapDetector.detect(primaryHand)
                 if (snapDetected) {
                   setSnapActive((prev) => {
                     const newState = !prev
                     console.log('🤏 SNAP detected! New state:', newState)
+                    return newState
+                  })
+                }
+
+                // Clap detection (two hands)
+                const clapDetected = clapDetector.detect(results.landmarks)
+                if (clapDetected) {
+                  setClapActive((prev) => {
+                    const newState = !prev
+                    console.log('👏 CLAP detected! New state:', newState)
                     return newState
                   })
                 }
