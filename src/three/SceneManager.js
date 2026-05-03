@@ -1,4 +1,7 @@
 import * as THREE from 'three'
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
 import { VideoPlane } from './VideoPlane.js'
 import { SnapAuraEffect } from './effects/SnapAuraEffect.js'
 import { PortalEffect } from './effects/PortalEffect.js'
@@ -13,6 +16,7 @@ export class SceneManager {
     this.container = containerElement
     this.video = video
     this.renderer = null
+    this.composer = null
     this.scene = null
     this.camera = null
     this.videoPlane = null
@@ -31,6 +35,8 @@ export class SceneManager {
     this.renderer = new THREE.WebGLRenderer({ antialias: true })
     this.renderer.setSize(window.innerWidth, window.innerHeight)
     this.renderer.setClearColor(0x000000)
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping
+    this.renderer.toneMappingExposure = 1.0
     this.container.appendChild(this.renderer.domElement)
 
     // Scene
@@ -44,6 +50,16 @@ export class SceneManager {
       1000
     )
     this.camera.position.z = 5
+
+    // Post-processing: bloom (must be after scene + camera exist)
+    this.composer = new EffectComposer(this.renderer)
+    this.composer.addPass(new RenderPass(this.scene, this.camera))
+    this.composer.addPass(new UnrealBloomPass(
+      new THREE.Vector2(window.innerWidth, window.innerHeight),
+      0.6,   // strength
+      0.4,   // radius
+      0.5    // threshold — eyes emit above this, typical video content below
+    ))
 
     // Video Plane
     this.videoPlane = new VideoPlane(this.video)
@@ -129,7 +145,7 @@ export class SceneManager {
       }
     })
 
-    this.renderer.render(this.scene, this.camera)
+    this.composer.render()
 
     if (this.isRunning) {
       requestAnimationFrame(this.animate)
@@ -140,6 +156,7 @@ export class SceneManager {
     this.camera.aspect = window.innerWidth / window.innerHeight
     this.camera.updateProjectionMatrix()
     this.renderer.setSize(window.innerWidth, window.innerHeight)
+    this.composer.setSize(window.innerWidth, window.innerHeight)
   }
 
   dispose() {
@@ -153,6 +170,7 @@ export class SceneManager {
     })
 
     this.videoPlane?.dispose()
+    this.composer?.dispose()
     this.renderer?.dispose()
     this.container?.removeChild(this.renderer.domElement)
   }

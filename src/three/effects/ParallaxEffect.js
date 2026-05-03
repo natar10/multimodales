@@ -6,14 +6,17 @@ const loader = new GLTFLoader()
 const EYE_COUNT = 15
 const SMOOTH_FRAMES = 4
 
+const EMISSIVE_COLOR = new THREE.Color(0x00ff88)
+
 export class ParallaxEffect {
   constructor() {
     this.group = new THREE.Group()
-    this.eyes = []   // { mesh, orbitX, orbitY, baseZ, parallaxFactor }
+    this.eyes = []   // { mesh, orbitX, orbitY, baseZ, parallaxFactor, meshData[] }
     this.isActive = false
     this.posHistory = []
     this.smoothX = 0
     this.smoothY = 0
+    this.time = 0
   }
 
   init(scene) {
@@ -41,11 +44,29 @@ export class ParallaxEffect {
         // Parallax factor: farther eyes move less, closer eyes move more
         const parallaxFactor = 1.0 + (baseZ - PLANE_Z) / 2.5
 
+        // Clone materials and set emissive green per mesh
+        const meshData = []
+        clone.traverse((child) => {
+          if (child.isMesh) {
+            const mat = child.material.clone()
+            if (mat.emissive !== undefined) {
+              mat.emissive = EMISSIVE_COLOR
+              mat.emissiveIntensity = 0.2
+            }
+            child.material = mat
+            meshData.push({
+              material: mat,
+              phase: Math.random() * Math.PI * 2,
+              freq: 0.4 + Math.random() * 1.2,
+            })
+          }
+        })
+
         clone.scale.setScalar(scale)
         clone.position.set(orbitX, orbitY, baseZ)
         clone.visible = false
 
-        this.eyes.push({ mesh: clone, orbitX, orbitY, baseZ, parallaxFactor })
+        this.eyes.push({ mesh: clone, orbitX, orbitY, baseZ, parallaxFactor, meshData })
         this.group.add(clone)
       }
 
@@ -57,6 +78,7 @@ export class ParallaxEffect {
 
   update(delta, faceDetections) {
     if (!this.isActive) return
+    this.time += delta
 
     if (faceDetections && faceDetections.length > 0) {
       const kps = faceDetections[0].keypoints
@@ -86,6 +108,13 @@ export class ParallaxEffect {
 
       // Slow spin for visual interest
       eye.mesh.rotation.y += delta * 0.85
+
+      // Animate emissive intensity independently per eye
+      for (const m of eye.meshData) {
+        if (m.material.emissive !== undefined) {
+          m.material.emissiveIntensity = 0.1 + 0.5 * (0.5 + 0.5 * Math.sin(this.time * m.freq + m.phase))
+        }
+      }
     }
   }
 
