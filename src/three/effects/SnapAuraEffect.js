@@ -1,17 +1,22 @@
 import * as THREE from 'three'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { normalizedToWorld, keypointCenter, PLANE_HEIGHT } from '../../utils/coordUtils.js'
+
+const loader = new GLTFLoader()
 
 export class SnapAuraEffect {
   constructor() {
-    this.group = new THREE.Group()
+    this.group = new THREE.Group()      // Root group — follows face position
+    this.chakraGroup = new THREE.Group() // Chakra + eye together
     this.auraMesh = null
+    this.chakraMesh = null
     this.eyeMesh = null
     this.isActive = false
     this.time = 0
   }
 
   init(scene) {
-    // Aura: esfera de puntos pulsante
+    // --- Aura: particle cloud behind everything ---
     const auraPts = []
     const auraCount = 500
     const radius = 3
@@ -24,11 +29,10 @@ export class SnapAuraEffect {
         radius * Math.cos(phi)
       )
     }
-
     const auraGeo = new THREE.BufferGeometry()
     auraGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(auraPts), 3))
     const auraMat = new THREE.PointsMaterial({
-      color: 0x00ff88,
+      color: 0xe5e556,
       size: 0.08,
       transparent: true,
       opacity: 0,
@@ -40,60 +44,114 @@ export class SnapAuraEffect {
     this.auraMesh.position.z = -10
     this.group.add(this.auraMesh)
 
-    // Tercer ojo
-    const eyeGeo = new THREE.IcosahedronGeometry(0.2, 3)
-    const eyeMat = new THREE.MeshBasicMaterial({
-      color: 0x00ff88,
-      transparent: true,
-      opacity: 0,
-      depthWrite: false,
-    })
-    this.eyeMesh = new THREE.Mesh(eyeGeo, eyeMat)
-    this.group.add(this.eyeMesh)
+    // --- Chakra GLB ---
+    loader.load('/models/chakra.glb', (gltf) => {
+      const chakra = gltf.scene
+      chakra.traverse((child) => {
+        if (child.isMesh) {
+          child.material = new THREE.MeshBasicMaterial({
+            color: 0xe5e556,
+            transparent: true,
+            opacity: 0,
+            depthWrite: false,
+            side: THREE.DoubleSide,
+          })
+          child.renderOrder = 2
+        }
+      })
+      chakra.scale.setScalar(0.25)
+      this.chakraMesh = chakra
+      this.chakraGroup.add(chakra)
+      console.log('✅ Chakra GLB loaded')
+    }, undefined, (err) => console.error('❌ Chakra load error:', err))
 
+    // --- Eye GLB ---
+    loader.load('/models/eye.glb', (gltf) => {
+      const eye = gltf.scene
+      eye.traverse((child) => {
+        if (child.isMesh) {
+          child.renderOrder = 3
+          // Keep original material — it's a realistic eye texture
+        }
+      })
+      eye.scale.setScalar(35)
+      this.eyeMesh = eye
+      this.chakraGroup.add(eye)
+      console.log('✅ Eye GLB loaded')
+    }, undefined, (err) => console.error('❌ Eye load error:', err))
+
+    // Dedicated light for the eye — follows chakraGroup
+    const eyeLight = new THREE.PointLight(0xffffff, 3, 5)
+    eyeLight.position.set(0, 0, 1.5) // In front of the eye
+    this.chakraGroup.add(eyeLight)
+
+    this.group.add(this.chakraGroup)
+    this.group.visible = false
     scene.add(this.group)
     console.log('✅ SnapAuraEffect initialized')
   }
 
-  /**
-   * @param {number} delta
-   * @param {Array} faceDetections - array from FaceDetector (result.detections)
-   */
   update(delta, faceDetections) {
-    if (!this.auraMesh || !this.eyeMesh) return
+    if (!this.auraMesh) return
 
     this.time += delta
 
     if (this.isActive) {
-      // Aura pulsa
-      this.auraMesh.material.opacity = (0.3 + 0.7 * Math.sin(this.time * 3)) * 0.8
-
-      // Posicionar ojo entre los dos ojos del rostro detectado
+      // Update forehead position from face detection
       if (faceDetections && faceDetections.length > 0) {
         const detection = faceDetections[0]
         const kps = detection.keypoints
-        // keypoint 0 = left eye, 1 = right eye (in normalized video space)
         if (kps && kps.length >= 2) {
           const center = keypointCenter(kps[0], kps[1])
-          const world = normalizedToWorld(center.x, center.y, 0.5)
-          // Move up to forehead level: use eye-to-nose distance as reference
           const eyeToNoseY = kps.length >= 3 ? Math.abs(kps[2].y - center.y) : 0.04
           const foreheadOffset = eyeToNoseY * PLANE_HEIGHT * 1.5
-          this.eyeMesh.position.set(world.x, world.y + foreheadOffset, world.z)
+          const world = normalizedToWorld(center.x, center.y, 0.5)
+
+          // Smooth position update
+          this.chakraGroup.position.x += (world.x - this.chakraGroup.position.x) * 0.15
+          this.chakraGroup.position.y += ((world.y + foreheadOffset) - this.chakraGroup.position.y) * 0.15
+          this.chakraGroup.position.z = world.z
         }
       }
 
-      // Ojo visible y pulsante
-      this.eyeMesh.material.opacity = 0.7 + 0.3 * Math.sin(this.time * 4)
-      const s = 0.9 + 0.1 * Math.sin(this.time * 2)
-      this.eyeMesh.scale.set(s, s, s)
-    } else {
-      // Fade out
-      this.auraMesh.material.opacity = Math.max(0, this.auraMesh.material.opacity - delta * 3)
-      this.eyeMesh.material.opacity = Math.max(0, this.eyeMesh.material.opacity - delta * 3)
-    }
+      // Spin chakra on Z axis (clockwise when facing camera)
+      if (this.chakraMesh) {
+        this.chakraMesh.rotation.x -= delta * 0.8
+        this.chakraMesh.rotation.y -= delta * 0.8
+      }
 
-    this.eyeMesh.rotation.y += 0.02
+      // Slow eye rotation
+      // if (this.eyeMesh) {
+      //   this.eyeMesh.rotation.y += delta * 0.3
+      // }
+
+      // Aura pulse
+      this.auraMesh.material.opacity = (0.3 + 0.7 * Math.sin(this.time * 3)) * 0.8
+
+      // Chakra opacity pulse
+      if (this.chakraMesh) {
+        this.chakraMesh.traverse((child) => {
+          if (child.isMesh) {
+            child.material.opacity = Math.min(
+              child.material.opacity + delta * 3,
+              0.85 + 0.15 * Math.sin(this.time * 2)
+            )
+          }
+        })
+      }
+    } else {
+      // Fade out aura
+      this.auraMesh.material.opacity = Math.max(0, this.auraMesh.material.opacity - delta * 3)
+
+      // Fade out chakra
+      if (this.chakraMesh) {
+        this.chakraMesh.traverse((child) => {
+          if (child.isMesh) {
+            child.material.opacity = Math.max(0, child.material.opacity - delta * 3)
+          }
+        })
+      }
+    }
   }
 
   setActive(active) {
@@ -101,14 +159,18 @@ export class SnapAuraEffect {
     console.log('✨ SnapAuraEffect.setActive():', active)
     if (active) {
       this.time = 0
+      this.group.visible = true
+    } else {
+      // Hide after fade out completes
+      setTimeout(() => {
+        if (!this.isActive) this.group.visible = false
+      }, 1000)
     }
   }
 
   dispose() {
     this.auraMesh?.geometry.dispose()
     this.auraMesh?.material.dispose()
-    this.eyeMesh?.geometry.dispose()
-    this.eyeMesh?.material.dispose()
     this.group.clear()
   }
 }
