@@ -1,20 +1,27 @@
 import { useEffect, useRef, useContext } from 'react'
-import { FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision'
+import { FaceDetector, FilesetResolver } from '@mediapipe/tasks-vision'
 import { AppContext } from '../context/AppContext.jsx'
 
 export function useFaceTracking(video, shouldInitialize) {
-  const faceLandmarkerRef = useRef(null)
+  const faceDetectorRef = useRef(null)
   const { faceLandmarksRef } = useContext(AppContext)
   const isInitializingRef = useRef(false)
   const frameCountRef = useRef(0)
+  const animFrameRef = useRef(null)
 
   useEffect(() => {
     if (!video || !shouldInitialize) {
-      // Cleanup when shouldInitialize becomes false
-      if (faceLandmarkerRef.current && !shouldInitialize) {
-        faceLandmarkerRef.current.close()
-        faceLandmarkerRef.current = null
+      // Cleanup when not needed
+      if (faceDetectorRef.current) {
+        console.log('🧹 Closing FaceDetector')
+        faceDetectorRef.current.close()
+        faceDetectorRef.current = null
         faceLandmarksRef.current = null
+        isInitializingRef.current = false
+        if (animFrameRef.current) {
+          cancelAnimationFrame(animFrameRef.current)
+          animFrameRef.current = null
+        }
       }
       return
     }
@@ -22,57 +29,63 @@ export function useFaceTracking(video, shouldInitialize) {
     if (isInitializingRef.current) return
     isInitializingRef.current = true
 
-    const initializeFaceLandmarker = async () => {
+    const initialize = async () => {
       try {
         const wasmPath = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm'
         const filesetResolver = await FilesetResolver.forVisionTasks(wasmPath)
 
-        const faceLandmarker = await FaceLandmarker.createFromOptions(filesetResolver, {
+        const faceDetector = await FaceDetector.createFromOptions(filesetResolver, {
           baseOptions: {
             modelAssetPath:
-              'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
+              'https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite',
             delegate: 'GPU',
           },
           runningMode: 'VIDEO',
-          numFaces: 2,
+          minDetectionConfidence: 0.5,
+          minSuppressionThreshold: 0.3,
         })
 
-        faceLandmarkerRef.current = faceLandmarker
-        console.log('✅ FaceLandmarker initialized')
+        faceDetectorRef.current = faceDetector
+        console.log('✅ FaceDetector initialized')
 
-        // Start detection loop (every 3 frames)
+        // Detection loop — every 2 frames for performance
         const detectionLoop = () => {
-          if (faceLandmarkerRef.current && video.readyState >= HTMLMediaElement.HAVE_METADATA) {
+          if (!faceDetectorRef.current) return
+
+          if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
             frameCountRef.current++
-            // Detect every 3 frames for performance
-            if (frameCountRef.current % 3 === 0) {
+            if (frameCountRef.current % 2 === 0) {
               try {
-                const results = faceLandmarkerRef.current.detectForVideo(video, Date.now())
-                faceLandmarksRef.current = results.landmarks
-              } catch (error) {
-                console.error('Face detection error:', error)
+                const result = faceDetectorRef.current.detectForVideo(video, performance.now())
+                // result.detections[i].keypoints:
+                //   0: left eye, 1: right eye, 2: nose, 3: mouth, 4: left ear, 5: right ear
+                faceLandmarksRef.current = result.detections ?? []
+              } catch (err) {
+                console.error('FaceDetector error:', err)
               }
             }
           }
-          requestAnimationFrame(detectionLoop)
+
+          animFrameRef.current = requestAnimationFrame(detectionLoop)
         }
+
         detectionLoop()
-      } catch (error) {
-        console.error('❌ Failed to initialize FaceLandmarker:', error)
+      } catch (err) {
+        console.error('❌ FaceDetector init failed:', err)
         isInitializingRef.current = false
       }
     }
 
-    initializeFaceLandmarker()
+    initialize()
 
     return () => {
-      if (faceLandmarkerRef.current) {
-        faceLandmarkerRef.current.close()
-        faceLandmarkerRef.current = null
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current)
+      if (faceDetectorRef.current) {
+        faceDetectorRef.current.close()
+        faceDetectorRef.current = null
         faceLandmarksRef.current = null
       }
+      isInitializingRef.current = false
     }
   }, [video, shouldInitialize, faceLandmarksRef])
-
-  return faceLandmarkerRef
 }

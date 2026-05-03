@@ -8,6 +8,7 @@ export function useThreeScene(containerRef, video) {
     snapActive,
     clapActive,
     mirrorActive,
+    faceLandmarksRef,
   } = useContext(AppContext)
 
   // Initialize SceneManager ONLY when video is ready
@@ -19,6 +20,7 @@ export function useThreeScene(containerRef, video) {
 
     console.log('🏗️ SceneManager creating with video ready...')
     const sceneManager = new SceneManager(containerRef.current, video)
+    sceneManager.setFaceDetectionsRef(faceLandmarksRef)
     sceneManager.init()
     console.log('▶️ SceneManager init complete, calling start()...')
     sceneManager.start()

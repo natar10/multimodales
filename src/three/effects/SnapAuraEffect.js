@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { normalizedToWorld, keypointCenter, PLANE_HEIGHT } from '../../utils/coordUtils.js'
 
 export class SnapAuraEffect {
   constructor() {
@@ -17,10 +18,11 @@ export class SnapAuraEffect {
     for (let i = 0; i < auraCount; i++) {
       const theta = Math.random() * Math.PI * 2
       const phi = Math.random() * Math.PI
-      const x = radius * Math.sin(phi) * Math.cos(theta)
-      const y = radius * Math.sin(phi) * Math.sin(theta)
-      const z = radius * Math.cos(phi)
-      auraPts.push(x, y, z)
+      auraPts.push(
+        radius * Math.sin(phi) * Math.cos(theta),
+        radius * Math.sin(phi) * Math.sin(theta),
+        radius * Math.cos(phi)
+      )
     }
 
     const auraGeo = new THREE.BufferGeometry()
@@ -31,50 +33,67 @@ export class SnapAuraEffect {
       transparent: true,
       opacity: 0,
       sizeAttenuation: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
     })
-    auraMat.blending = THREE.AdditiveBlending
     this.auraMesh = new THREE.Points(auraGeo, auraMat)
     this.auraMesh.position.z = -10
     this.group.add(this.auraMesh)
 
-    // Tercer ojo: esfera emissiva verde
-    const eyeGeo = new THREE.IcosahedronGeometry(0.3, 4)
+    // Tercer ojo
+    const eyeGeo = new THREE.IcosahedronGeometry(0.2, 3)
     const eyeMat = new THREE.MeshBasicMaterial({
       color: 0x00ff88,
-      emissive: 0x00ff88,
-      emissiveIntensity: 0.8,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
     })
     this.eyeMesh = new THREE.Mesh(eyeGeo, eyeMat)
-    this.eyeMesh.position.set(0, 1, -9.5)
-    this.eyeMesh.scale.set(0, 0, 0)
     this.group.add(this.eyeMesh)
 
     scene.add(this.group)
     console.log('✅ SnapAuraEffect initialized')
   }
 
-  update(delta) {
+  /**
+   * @param {number} delta
+   * @param {Array} faceDetections - array from FaceDetector (result.detections)
+   */
+  update(delta, faceDetections) {
     if (!this.auraMesh || !this.eyeMesh) return
 
     this.time += delta
 
     if (this.isActive) {
-      const pulseFactor = 0.3 + 0.7 * Math.sin(this.time * 3)
-      this.auraMesh.material.opacity = pulseFactor * 0.8
+      // Aura pulsa
+      this.auraMesh.material.opacity = (0.3 + 0.7 * Math.sin(this.time * 3)) * 0.8
 
-      const eyeScale = 0.8 + 0.2 * Math.sin(this.time * 2)
-      this.eyeMesh.scale.set(eyeScale, eyeScale, eyeScale)
-
-      this.eyeMesh.rotation.x += 0.01
-      this.eyeMesh.rotation.y += 0.015
-    } else {
-      this.auraMesh.material.opacity = Math.max(0, this.auraMesh.material.opacity - delta * 3)
-      const currentScale = this.eyeMesh.scale.x
-      if (currentScale > 0) {
-        const newScale = Math.max(0, currentScale - delta * 3)
-        this.eyeMesh.scale.set(newScale, newScale, newScale)
+      // Posicionar ojo entre los dos ojos del rostro detectado
+      if (faceDetections && faceDetections.length > 0) {
+        const detection = faceDetections[0]
+        const kps = detection.keypoints
+        // keypoint 0 = left eye, 1 = right eye (in normalized video space)
+        if (kps && kps.length >= 2) {
+          const center = keypointCenter(kps[0], kps[1])
+          const world = normalizedToWorld(center.x, center.y, 0.5)
+          // Move up to forehead level: use eye-to-nose distance as reference
+          const eyeToNoseY = kps.length >= 3 ? Math.abs(kps[2].y - center.y) : 0.04
+          const foreheadOffset = eyeToNoseY * PLANE_HEIGHT * 1.5
+          this.eyeMesh.position.set(world.x, world.y + foreheadOffset, world.z)
+        }
       }
+
+      // Ojo visible y pulsante
+      this.eyeMesh.material.opacity = 0.7 + 0.3 * Math.sin(this.time * 4)
+      const s = 0.9 + 0.1 * Math.sin(this.time * 2)
+      this.eyeMesh.scale.set(s, s, s)
+    } else {
+      // Fade out
+      this.auraMesh.material.opacity = Math.max(0, this.auraMesh.material.opacity - delta * 3)
+      this.eyeMesh.material.opacity = Math.max(0, this.eyeMesh.material.opacity - delta * 3)
     }
+
+    this.eyeMesh.rotation.y += 0.02
   }
 
   setActive(active) {
@@ -86,14 +105,10 @@ export class SnapAuraEffect {
   }
 
   dispose() {
-    if (this.auraMesh) {
-      this.auraMesh.geometry.dispose()
-      this.auraMesh.material.dispose()
-    }
-    if (this.eyeMesh) {
-      this.eyeMesh.geometry.dispose()
-      this.eyeMesh.material.dispose()
-    }
+    this.auraMesh?.geometry.dispose()
+    this.auraMesh?.material.dispose()
+    this.eyeMesh?.geometry.dispose()
+    this.eyeMesh?.material.dispose()
     this.group.clear()
   }
 }

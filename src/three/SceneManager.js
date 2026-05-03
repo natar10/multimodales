@@ -18,6 +18,11 @@ export class SceneManager {
     this.effects = {}
     this.isRunning = false
     this.startTime = Date.now()
+    this.faceDetectionsRef = null  // Set externally from useFaceTracking
+  }
+
+  setFaceDetectionsRef(ref) {
+    this.faceDetectionsRef = ref
   }
 
   init() {
@@ -110,10 +115,13 @@ export class SceneManager {
       this.videoPlane.update()
     }
 
+    // Read face detections from ref (updated by useFaceTracking)
+    const faceDetections = this.faceDetectionsRef?.current ?? null
+
     // Update all effects
     Object.values(this.effects).forEach((effect) => {
       if (effect.update) {
-        effect.update(deltaTime)
+        effect.update(deltaTime, faceDetections)
       }
     })
 
