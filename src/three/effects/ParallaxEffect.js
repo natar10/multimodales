@@ -6,47 +6,46 @@ const loader = new GLTFLoader()
 const EMISSIVE_COLOR = new THREE.Color(0x00ff88)
 
 // Configuracion desde .env (con fallbacks)
-const EYE_COUNT     = parseInt(import.meta.env.VITE_EYE_COUNT)       || 15
-const EYE_SCALE_MIN = parseFloat(import.meta.env.VITE_EYE_SCALE_MIN) || 40
-const EYE_SCALE_MAX = parseFloat(import.meta.env.VITE_EYE_SCALE_MAX) || 700
+const EYE_COUNT          = parseInt(import.meta.env.VITE_EYE_COUNT)           || 35
+const EYE_SCALE_MIN      = parseFloat(import.meta.env.VITE_EYE_SCALE_MIN)     || 30
+const EYE_SCALE_MAX      = parseFloat(import.meta.env.VITE_EYE_SCALE_MAX)     || 900
+const PARALLAX_INTENSITY = parseFloat(import.meta.env.VITE_PARALLAX_INTENSITY) || 1.0
 
 const SMOOTH_FRAMES = 4
 
 /**
- * Posiciones normalizadas fijas en [-0.5, 0.5] para X e Y.
- * Se multiplican por planeDimensions en update() para obtener world coords reales.
- * Distribucion en cuadricula 5x3 con offset alternado — cubre todo el frame.
+ * Hash determinista simple — devuelve un valor en [0, 1) para un indice dado.
+ * Evita Math.random() para que las posiciones sean estables entre activaciones.
  */
-const NORMALIZED_POSITIONS = [
-  // fila 0 (arriba)
-  { nx: -0.45, ny:  0.42 },
-  { nx: -0.22, ny:  0.45 },
-  { nx:  0.00, ny:  0.40 },
-  { nx:  0.23, ny:  0.44 },
-  { nx:  0.46, ny:  0.41 },
-  // fila 1 (centro)
-  { nx: -0.46, ny:  0.02 },
-  { nx: -0.20, ny: -0.05 },
-  { nx:  0.01, ny:  0.08 },
-  { nx:  0.22, ny: -0.03 },
-  { nx:  0.45, ny:  0.05 },
-  // fila 2 (abajo)
-  { nx: -0.44, ny: -0.40 },
-  { nx: -0.21, ny: -0.43 },
-  { nx:  0.00, ny: -0.38 },
-  { nx:  0.24, ny: -0.42 },
-  { nx:  0.45, ny: -0.39 },
-]
+function hash(n) {
+  const x = Math.sin(n * 127.1 + 311.7) * 43758.5453
+  return x - Math.floor(x)
+}
 
-// scaleT y depthT deterministas por indice (no dependen de dimensiones del plano)
-const EYE_META = Array.from({ length: EYE_COUNT }, (_, i) => {
-  // scaleT cuadratico: mas ojos pequenos que grandes
-  const t = i / Math.max(EYE_COUNT - 1, 1)
-  const scaleT = t * t
-  // depthT: alterna capas
-  const depthT = ((i * 3 + 1) % EYE_COUNT) / Math.max(EYE_COUNT - 1, 1)
-  return { scaleT, depthT }
-})
+/**
+ * Genera metadatos para cada ojo usando hash determinista.
+ * nx/ny en [-0.55, 0.55] — ligeramente fuera del borde para efecto de profundidad.
+ */
+function buildEyeMeta(count) {
+  return Array.from({ length: count }, (_, i) => {
+    // Posicion aleatoria cubriendo todo el frame + un poco fuera de los bordes
+    const nx = -0.55 + hash(i * 3 + 0) * 1.10      // [-0.55, 0.55]
+    const ny = -0.52 + hash(i * 3 + 1) * 1.04      // [-0.52, 0.52]
+
+    // Escala: distribucion exponencial — muchos pequenos, pocos enormes
+    const st = hash(i * 3 + 2)
+    const scaleT = st * st * st                      // sesgo fuerte hacia pequenos
+
+    // Profundidad: distribucion uniforme entre capas
+    const depthT = hash(i * 7 + 5)
+
+    // Fase y frecuencia de animacion
+    const phase = hash(i * 11 + 3) * Math.PI * 2
+    const freq  = 0.2 + hash(i * 13 + 7) * 1.0
+
+    return { nx, ny, scaleT, depthT, phase, freq }
+  })
+}
 
 export class ParallaxEffect {
   constructor() {
@@ -57,6 +56,7 @@ export class ParallaxEffect {
     this.smoothX = 0
     this.smoothY = 0
     this.time = 0
+    this.meta = buildEyeMeta(EYE_COUNT)
   }
 
   init(scene) {
@@ -65,50 +65,44 @@ export class ParallaxEffect {
 
       for (let i = 0; i < EYE_COUNT; i++) {
         const clone = template.clone(true)
-        const pos = NORMALIZED_POSITIONS[i % NORMALIZED_POSITIONS.length]
-        const meta = EYE_META[i]
+        const m = this.meta[i]
 
-        // Escala: de EYE_SCALE_MIN a EYE_SCALE_MAX con distribucion cuadratica
-        const scale = EYE_SCALE_MIN + meta.scaleT * (EYE_SCALE_MAX - EYE_SCALE_MIN)
+        // Escala exponencial: muchos ojos pequenos, pocos enormes
+        const scale = EYE_SCALE_MIN + m.scaleT * (EYE_SCALE_MAX - EYE_SCALE_MIN)
 
-        // Profundidad: spread entre z=-12 y z=-8
-        const baseZ = PLANE_Z + (-2.0 + meta.depthT * 4.0)
+        // Profundidad: spread entre z=-13 y z=-7
+        const baseZ = PLANE_Z + (-3.0 + m.depthT * 6.0)
 
-        // Parallax: ojos mas cercanos se mueven mas con la cara
-        const parallaxStrength = 0.06 + meta.depthT * 0.20
+        // Parallax: ojos mas cercanos (depthT alto) se mueven mas
+        const parallaxStrength = (0.04 + m.depthT * 0.22) * PARALLAX_INTENSITY
 
-        // Clonar materiales para animacion independiente
+        // Clonar materiales
         const meshData = []
         clone.traverse((child) => {
           if (child.isMesh) {
             const mat = child.material.clone()
             if (mat.emissive !== undefined) {
               mat.emissive = EMISSIVE_COLOR
-              mat.emissiveIntensity = 0.15
+              mat.emissiveIntensity = 0.1
             }
             child.material = mat
-            meshData.push({
-              material: mat,
-              phase: (i * 1.37 + 0.5) % (Math.PI * 2),
-              freq: 0.3 + (i % 5) * 0.22,
-            })
+            meshData.push({ material: mat, phase: m.phase, freq: m.freq })
           }
         })
 
         clone.scale.setScalar(scale)
-        // Posicion inicial con dimensiones por defecto — se corrige en el primer update()
         clone.position.set(
-          pos.nx * planeDimensions.width,
-          pos.ny * planeDimensions.height,
+          m.nx * planeDimensions.width,
+          m.ny * planeDimensions.height,
           baseZ
         )
         clone.visible = false
 
-        this.eyes.push({ mesh: clone, pos, baseZ, parallaxStrength, meshData })
+        this.eyes.push({ mesh: clone, meta: m, baseZ, parallaxStrength, meshData })
         this.group.add(clone)
       }
 
-      console.log(`✅ ParallaxEffect: ${EYE_COUNT} ojos | escala ${EYE_SCALE_MIN.toFixed(0)}–${EYE_SCALE_MAX.toFixed(0)}`)
+      console.log(`✅ ParallaxEffect: ${EYE_COUNT} ojos | escala ${EYE_SCALE_MIN}–${EYE_SCALE_MAX}`)
     }, undefined, (err) => console.error('❌ ParallaxEffect load error:', err))
 
     scene.add(this.group)
@@ -118,7 +112,7 @@ export class ParallaxEffect {
     if (!this.isActive) return
     this.time += delta
 
-    // Posicion suavizada de la cara en world coords
+    // Posicion suavizada de la cara
     if (faceDetections && faceDetections.length > 0) {
       const kps = faceDetections[0].keypoints
       if (kps && kps.length >= 2) {
@@ -136,26 +130,26 @@ export class ParallaxEffect {
     }
 
     for (const eye of this.eyes) {
-      // Posicion base usando dimensiones REALES del plano (actualizadas por SceneManager)
-      const baseX = eye.pos.nx * planeDimensions.width
-      const baseY = eye.pos.ny * planeDimensions.height
+      // Posicion base con dimensiones reales del plano (actualizadas cada frame)
+      const baseX = eye.meta.nx * planeDimensions.width
+      const baseY = eye.meta.ny * planeDimensions.height
 
-      // Parallax sutil: desplazamiento opuesto al movimiento de la cara
+      // Parallax: desplazamiento opuesto al movimiento de la cara
       const targetX = baseX - this.smoothX * eye.parallaxStrength
       const targetY = baseY - this.smoothY * eye.parallaxStrength
 
-      eye.mesh.position.x += (targetX - eye.mesh.position.x) * 0.06
-      eye.mesh.position.y += (targetY - eye.mesh.position.y) * 0.06
+      eye.mesh.position.x += (targetX - eye.mesh.position.x) * 0.05
+      eye.mesh.position.y += (targetY - eye.mesh.position.y) * 0.05
       eye.mesh.position.z = eye.baseZ
 
-      // Rotacion lenta
-      eye.mesh.rotation.y += delta * 0.4
-      eye.mesh.rotation.x += delta * 0.12
+      // Rotacion lenta e independiente
+      eye.mesh.rotation.y += delta * (0.2 + eye.meta.depthT * 0.5)
+      eye.mesh.rotation.x += delta * 0.08
 
-      // Pulso de emision independiente por ojo
-      for (const m of eye.meshData) {
-        if (m.material.emissive !== undefined) {
-          m.material.emissiveIntensity = 0.05 + 0.35 * (0.5 + 0.5 * Math.sin(this.time * m.freq + m.phase))
+      // Pulso de emision
+      for (const md of eye.meshData) {
+        if (md.material.emissive !== undefined) {
+          md.material.emissiveIntensity = 0.05 + 0.3 * (0.5 + 0.5 * Math.sin(this.time * md.freq + md.phase))
         }
       }
     }
