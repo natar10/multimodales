@@ -137,15 +137,14 @@ export class ParallaxEffect {
         this.smoothY = sum.y / this.posHistory.length
       }
     }
-
     for (const eye of this.eyes) {
       const baseX = eye.meta.nx * planeDimensions.width
       const baseY = eye.meta.ny * planeDimensions.height
       const targetX = baseX - this.smoothX * eye.parallaxStrength
       const targetY = baseY - this.smoothY * eye.parallaxStrength
 
-      eye.group.position.x += (targetX - eye.group.position.x) * 0.05
-      eye.group.position.y += (targetY - eye.group.position.y) * 0.05
+      eye.group.position.x += (targetX - eye.group.position.x) * 0.15
+      eye.group.position.y += (targetY - eye.group.position.y) * 0.15
       eye.group.position.z = eye.baseZ
 
       eye.mesh.rotation.y += delta * (0.2 + eye.meta.depthT * 0.5)
@@ -156,13 +155,38 @@ export class ParallaxEffect {
     }
   }
 
-  setActive(active) {
+  setActive(active, faceDetections) {
     this.isActive = active
-    for (const eye of this.eyes) eye.group.visible = active
-    if (!active) {
+    if (active) {
+      // Pre-llenar el historial con la posición actual de la cara
+      // para evitar el salto brusco en el primer frame
+      if (faceDetections && faceDetections.length > 0) {
+        const kps = faceDetections[0].keypoints
+        if (kps && kps.length >= 2) {
+          const center = keypointCenter(kps[0], kps[1])
+          const wx = (0.5 - center.x) * planeDimensions.width
+          const wy = (0.5 - center.y) * planeDimensions.height
+          this.posHistory = Array(SMOOTH_FRAMES).fill({ x: wx, y: wy })
+          this.smoothX = wx
+          this.smoothY = wy
+        }
+      }
+      // Teletransportar a posición correcta con parallax ya aplicado
+      for (const eye of this.eyes) {
+        const baseX = eye.meta.nx * planeDimensions.width
+        const baseY = eye.meta.ny * planeDimensions.height
+        eye.group.position.set(
+          baseX - this.smoothX * eye.parallaxStrength,
+          baseY - this.smoothY * eye.parallaxStrength,
+          eye.baseZ
+        )
+        eye.group.visible = true
+      }
+    } else {
       this.posHistory = []
       this.smoothX = 0
       this.smoothY = 0
+      for (const eye of this.eyes) eye.group.visible = false
     }
     console.log('👁️ ParallaxEffect.setActive():', active)
   }

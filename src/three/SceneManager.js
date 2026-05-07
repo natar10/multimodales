@@ -100,7 +100,8 @@ export class SceneManager {
     const effect = this.effects['snap']
     if (effect) effect.setActive(active)
     const parallax = this.effects['parallax']
-    if (parallax) parallax.setActive(active)
+    const faceDetections = this.faceDetectionsRef?.current ?? null
+    if (parallax) parallax.setActive(active, faceDetections)
   }
 
   setClapActive(active) {
