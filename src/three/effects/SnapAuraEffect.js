@@ -3,6 +3,8 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { normalizedToWorld, keypointCenter, planeDimensions } from '../../utils/coordUtils.js'
 
 const loader = new GLTFLoader()
+// Cache desactivado para que este loader no interfiera con ParallaxEffect
+loader.manager = new THREE.LoadingManager()
 
 export class SnapAuraEffect {
   constructor() {
@@ -44,6 +46,8 @@ export class SnapAuraEffect {
         }
       })
       eye.scale.setScalar(parseFloat(import.meta.env.VITE_SNAP_EYE_SCALE) || 35)
+      // Rotar para que la pupila mire al frente (hacia la cámara)
+      eye.rotation.y = parseFloat(import.meta.env.VITE_SNAP_EYE_ROTATION_Y) || Math.PI
       this.eyeMesh = eye
       this.chakraGroup.add(eye)
       console.log('✅ Eye GLB loaded')

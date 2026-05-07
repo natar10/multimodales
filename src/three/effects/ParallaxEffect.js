@@ -3,6 +3,9 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { keypointCenter, planeDimensions, PLANE_Z } from '../../utils/coordUtils.js'
 
 const loader = new GLTFLoader()
+// Cache desactivado para que este loader no interfiera con otros efectos
+// que carguen el mismo modelo (ej: SnapAuraEffect)
+loader.manager = new THREE.LoadingManager()
 
 // Configuracion desde .env
 const EYE_COUNT          = parseInt(import.meta.env.VITE_EYE_COUNT)            || 35
