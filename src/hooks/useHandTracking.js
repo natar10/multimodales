@@ -72,19 +72,20 @@ export function useHandTracking(video) {
         detectionLoop()
       } catch (error) {
         console.error('❌ Failed to initialize HandLandmarker:', error)
-        isInitializingRef.current = false
       }
     }
 
     initializeHandLandmarker()
 
     return () => {
+      console.log('🧹 Cleaning up HandLandmarker')
       if (handLandmarkerRef.current) {
         handLandmarkerRef.current.close()
         handLandmarkerRef.current = null
       }
+      isInitializingRef.current = false  // Reset para permitir reinicialización
     }
-  }, [video, handLandmarksRef])
+  }, [video, handLandmarksRef, setSnapActive, setClapActive])
 
   return handLandmarkerRef
 }

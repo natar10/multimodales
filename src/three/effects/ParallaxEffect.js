@@ -1,22 +1,58 @@
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
-import { keypointCenter, PLANE_WIDTH, PLANE_HEIGHT, PLANE_Z } from '../../utils/coordUtils.js'
+import { keypointCenter, planeDimensions, PLANE_Z } from '../../utils/coordUtils.js'
 
 const loader = new GLTFLoader()
-const EYE_COUNT = 15
+const EMISSIVE_COLOR = new THREE.Color(0x00ff88)
+
+// Configuracion desde .env (con fallbacks)
+const EYE_COUNT     = parseInt(import.meta.env.VITE_EYE_COUNT)     || 15
+const EYE_SCALE_MIN = parseFloat(import.meta.env.VITE_EYE_SCALE_MIN) || 40
+const EYE_SCALE_MAX = parseFloat(import.meta.env.VITE_EYE_SCALE_MAX) || 700
+
 const SMOOTH_FRAMES = 4
 
-const EMISSIVE_COLOR = new THREE.Color(0x00ff88)
+/**
+ * Genera posiciones distribuidas por todo el canvas usando una cuadricula
+ * irregular con offset alternado por fila. Determinista (sin Math.random)
+ * para que los ojos no salten al reactivar el efecto.
+ */
+function buildSeeds(count) {
+  const seeds = []
+  const cols = 5
+  const rows = Math.ceil(count / cols)
+
+  for (let i = 0; i < count; i++) {
+    const col = i % cols
+    const row = Math.floor(i / cols)
+
+    // Espacio normalizado [-0.48, 0.48] en X, [-0.45, 0.45] en Y
+    const nx = -0.48 + (col / (cols - 1)) * 0.96 + (row % 2) * 0.09
+    const ny = rows > 1 ? -0.45 + (row / (rows - 1)) * 0.90 : 0
+
+    // scaleT: distribucion no lineal — mas ojos pequenos que grandes
+    // Usamos cuadrado para sesgar hacia valores bajos
+    const t = i / (count - 1)
+    const scaleT = t * t   // 0 → 1 cuadratico
+
+    // depthT: alterna capas de profundidad
+    const depthT = ((i * 3 + 1) % count) / (count - 1)
+
+    seeds.push({ nx, ny, scaleT, depthT })
+  }
+  return seeds
+}
 
 export class ParallaxEffect {
   constructor() {
     this.group = new THREE.Group()
-    this.eyes = []   // { mesh, orbitX, orbitY, baseZ, parallaxFactor, meshData[] }
+    this.eyes = []
     this.isActive = false
     this.posHistory = []
     this.smoothX = 0
     this.smoothY = 0
     this.time = 0
+    this.seeds = buildSeeds(EYE_COUNT)
   }
 
   init(scene) {
@@ -25,52 +61,49 @@ export class ParallaxEffect {
 
       for (let i = 0; i < EYE_COUNT; i++) {
         const clone = template.clone(true)
+        const seed = this.seeds[i]
 
-        // Evenly space angles around face, with slight randomness
-        const angle = (i / EYE_COUNT) * Math.PI * 2 + (Math.random() - 0.5) * 0.9
-        const radius = 2.8 + Math.random() * 7.2   // 2.2 – 5.4 world units from face
+        // Escala: de EYE_SCALE_MIN (pequeno) a EYE_SCALE_MAX (enorme)
+        const scale = EYE_SCALE_MIN + seed.scaleT * (EYE_SCALE_MAX - EYE_SCALE_MIN)
 
-        // Fixed orbit offset from face center (keeps eyes around the face)
-        const orbitX = Math.cos(angle) * radius
-        const orbitY = Math.sin(angle) * radius * 0.75   // flatten slightly on Y
+        // Profundidad: spread entre z=-12 y z=-8 (delante y detras del plano de video)
+        const baseZ = PLANE_Z + (-2.0 + seed.depthT * 4.0)
 
-        // Depth: spread ± relative to video plane
-        const depthT = i / (EYE_COUNT - 1)   // deterministic spread 0→1
-        const baseZ = PLANE_Z + (-2.0 + depthT * 3.5)   // -12 to -8.5
+        // Parallax: ojos mas cercanos (z mayor) se mueven mas
+        const parallaxStrength = 0.06 + seed.depthT * 0.20
 
-        // Scale: closer eyes are larger
-        const scale = 15 + depthT * 42   // 8 to 30
-
-        // Parallax factor: farther eyes move less, closer eyes move more
-        const parallaxFactor = 1.0 + (baseZ - PLANE_Z) / 2.5
-
-        // Clone materials and set emissive green per mesh
+        // Clonar materiales para animacion independiente
         const meshData = []
         clone.traverse((child) => {
           if (child.isMesh) {
             const mat = child.material.clone()
             if (mat.emissive !== undefined) {
               mat.emissive = EMISSIVE_COLOR
-              mat.emissiveIntensity = 0.2
+              mat.emissiveIntensity = 0.15
             }
             child.material = mat
             meshData.push({
               material: mat,
-              phase: Math.random() * Math.PI * 2,
-              freq: 0.4 + Math.random() * 1.2,
+              phase: (i * 1.37 + 0.5) % (Math.PI * 2),
+              freq: 0.3 + (i % 5) * 0.22,
             })
           }
         })
 
         clone.scale.setScalar(scale)
-        clone.position.set(orbitX, orbitY, baseZ)
+        // Posicion inicial — se recalcula en update() con dimensiones reales del plano
+        clone.position.set(
+          seed.nx * planeDimensions.width,
+          seed.ny * planeDimensions.height,
+          baseZ
+        )
         clone.visible = false
 
-        this.eyes.push({ mesh: clone, orbitX, orbitY, baseZ, parallaxFactor, meshData })
+        this.eyes.push({ mesh: clone, seed, baseZ, parallaxStrength, meshData })
         this.group.add(clone)
       }
 
-      console.log('✅ ParallaxEffect: spawned', EYE_COUNT, 'eye clones')
+      console.log(`✅ ParallaxEffect: ${EYE_COUNT} ojos | escala ${EYE_SCALE_MIN}–${EYE_SCALE_MAX}`)
     }, undefined, (err) => console.error('❌ ParallaxEffect load error:', err))
 
     scene.add(this.group)
@@ -80,12 +113,13 @@ export class ParallaxEffect {
     if (!this.isActive) return
     this.time += delta
 
+    // Posicion suavizada de la cara en world coords
     if (faceDetections && faceDetections.length > 0) {
       const kps = faceDetections[0].keypoints
       if (kps && kps.length >= 2) {
         const center = keypointCenter(kps[0], kps[1])
-        const wx = (0.5 - center.x) * PLANE_WIDTH
-        const wy = (0.5 - center.y) * PLANE_HEIGHT
+        const wx = (0.5 - center.x) * planeDimensions.width
+        const wy = (0.5 - center.y) * planeDimensions.height
 
         this.posHistory.push({ x: wx, y: wy })
         if (this.posHistory.length > SMOOTH_FRAMES) this.posHistory.shift()
@@ -97,22 +131,26 @@ export class ParallaxEffect {
     }
 
     for (const eye of this.eyes) {
-      // Eye tracks face position scaled by its depth-based parallax factor,
-      // plus its fixed orbit offset so it stays around (not in front of) the face
-      const targetX = this.smoothX * eye.parallaxFactor + eye.orbitX
-      const targetY = this.smoothY * eye.parallaxFactor + eye.orbitY
+      // Posicion base distribuida por todo el canvas
+      const baseX = eye.seed.nx * planeDimensions.width
+      const baseY = eye.seed.ny * planeDimensions.height
 
-      eye.mesh.position.x += (targetX - eye.mesh.position.x) * 0.08
-      eye.mesh.position.y += (targetY - eye.mesh.position.y) * 0.08
+      // Parallax: desplazamiento sutil opuesto al movimiento de la cara
+      const targetX = baseX - this.smoothX * eye.parallaxStrength
+      const targetY = baseY - this.smoothY * eye.parallaxStrength
+
+      eye.mesh.position.x += (targetX - eye.mesh.position.x) * 0.06
+      eye.mesh.position.y += (targetY - eye.mesh.position.y) * 0.06
       eye.mesh.position.z = eye.baseZ
 
-      // Slow spin for visual interest
-      eye.mesh.rotation.y += delta * 0.85
+      // Rotacion lenta
+      eye.mesh.rotation.y += delta * 0.4
+      eye.mesh.rotation.x += delta * 0.12
 
-      // Animate emissive intensity independently per eye
+      // Pulso de emision independiente
       for (const m of eye.meshData) {
         if (m.material.emissive !== undefined) {
-          m.material.emissiveIntensity = 0.1 + 0.5 * (0.5 + 0.5 * Math.sin(this.time * m.freq + m.phase))
+          m.material.emissiveIntensity = 0.05 + 0.35 * (0.5 + 0.5 * Math.sin(this.time * m.freq + m.phase))
         }
       }
     }
@@ -125,6 +163,8 @@ export class ParallaxEffect {
     }
     if (!active) {
       this.posHistory = []
+      this.smoothX = 0
+      this.smoothY = 0
     }
     console.log('👁️ ParallaxEffect.setActive():', active)
   }

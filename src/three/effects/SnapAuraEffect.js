@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
-import { normalizedToWorld, keypointCenter, PLANE_HEIGHT } from '../../utils/coordUtils.js'
+import { normalizedToWorld, keypointCenter, planeDimensions } from '../../utils/coordUtils.js'
 
 const loader = new GLTFLoader()
 
@@ -29,7 +29,7 @@ export class SnapAuraEffect {
           child.renderOrder = 2
         }
       })
-      chakra.scale.setScalar(0.25)
+      chakra.scale.setScalar(import.meta.env.VITE_SNAP_CHAKRA_SCALE)
       this.chakraMesh = chakra
       this.chakraGroup.add(chakra)
       console.log('✅ Chakra GLB loaded')
@@ -43,15 +43,15 @@ export class SnapAuraEffect {
           child.renderOrder = 3
         }
       })
-      eye.scale.setScalar(35)
+      eye.scale.setScalar(parseFloat(import.meta.env.VITE_SNAP_EYE_SCALE) || 35)
       this.eyeMesh = eye
       this.chakraGroup.add(eye)
       console.log('✅ Eye GLB loaded')
     }, undefined, (err) => console.error('❌ Eye load error:', err))
 
     // Light for the eye
-    const eyeLight = new THREE.PointLight(0xffffff, 3, 5)
-    eyeLight.position.set(0, 0, 1.5)
+    const eyeLight = new THREE.PointLight(0xffffff, 3, 2)
+    eyeLight.position.set(1, 0, 1.5)
     this.chakraGroup.add(eyeLight)
 
     this.chakraGroup.visible = false
@@ -70,7 +70,7 @@ export class SnapAuraEffect {
         if (kps && kps.length >= 2) {
           const center = keypointCenter(kps[0], kps[1])
           const eyeToNoseY = kps.length >= 3 ? Math.abs(kps[2].y - center.y) : 0.04
-          const foreheadOffset = eyeToNoseY * PLANE_HEIGHT * 1.5
+          const foreheadOffset = eyeToNoseY * planeDimensions.height * 1.5
           const world = normalizedToWorld(center.x, center.y, 0.5)
 
           this.chakraGroup.position.x += (world.x - this.chakraGroup.position.x) * 0.15

@@ -69,7 +69,7 @@ function AppContent() {
   useFaceTracking(videoReady ? videoRef.current : null, snapActive || clapActive)
 
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+    <div style={{ width: '100vw', height: '100vh', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000' }}>
       <CanvasOverlay ref={canvasRef} />
 
       {/* Video element */}

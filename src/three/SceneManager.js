@@ -1,7 +1,6 @@
 import * as THREE from 'three'
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
 import { VideoPlane } from './VideoPlane.js'
 import { SnapAuraEffect } from './effects/SnapAuraEffect.js'
 import { PortalEffect } from './effects/PortalEffect.js'
@@ -9,6 +8,7 @@ import { BubblesEffect } from './effects/BubblesEffect.js'
 import { MirrorEffect } from './effects/MirrorEffect.js'
 import { SpiderSenseEffect } from './effects/SpiderSenseEffect.js'
 import { ParallaxEffect } from './effects/ParallaxEffect.js'
+import { planeDimensions } from '../utils/coordUtils.js'
 
 export class SceneManager {
   constructor(containerElement, video) {
@@ -31,39 +31,44 @@ export class SceneManager {
   }
 
   init() {
+    // Dimensiones fijas desde .env (con fallback a ventana completa)
+    const canvasW = parseInt(import.meta.env.VITE_CANVAS_WIDTH)  || window.innerWidth
+    const canvasH = parseInt(import.meta.env.VITE_CANVAS_HEIGHT) || window.innerHeight
+
     // Renderer
     this.renderer = new THREE.WebGLRenderer({ antialias: true })
-    this.renderer.setSize(window.innerWidth, window.innerHeight)
+    this.renderer.setSize(canvasW, canvasH)
     this.renderer.setClearColor(0x000000)
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping
+    this.renderer.toneMapping = THREE.NoToneMapping
     this.renderer.toneMappingExposure = 1.0
-    this.container.appendChild(this.renderer.domElement)
+
+    // Centrar el canvas en el contenedor via CSS
+    const canvas = this.renderer.domElement
+    canvas.style.display = 'block'
+    canvas.style.margin = 'auto'
+    this.container.appendChild(canvas)
 
     // Scene
     this.scene = new THREE.Scene()
 
-    // Camera
+    // Camera — aspect ratio del canvas configurado
     this.camera = new THREE.PerspectiveCamera(
       75,
-      window.innerWidth / window.innerHeight,
+      canvasW / canvasH,
       0.1,
       1000
     )
     this.camera.position.z = 5
 
-    // Post-processing: bloom (must be after scene + camera exist)
+    // Post-processing
     this.composer = new EffectComposer(this.renderer)
     this.composer.addPass(new RenderPass(this.scene, this.camera))
-    this.composer.addPass(new UnrealBloomPass(
-      new THREE.Vector2(window.innerWidth, window.innerHeight),
-      0.6,   // strength
-      0.4,   // radius
-      0.5    // threshold — eyes emit above this, typical video content below
-    ))
 
     // Video Plane
     this.videoPlane = new VideoPlane(this.video)
     this.videoPlane.init(this.scene)
+    this.videoPlane.fitToCamera(this.camera)
+    this.syncPlaneDimensions()
     console.log('🎬 VideoPlane initialized, scene children:', this.scene.children.length)
 
     // Lighting
@@ -78,7 +83,7 @@ export class SceneManager {
     this.registerEffect('spiderSense', new SpiderSenseEffect())
     this.registerEffect('parallax', new ParallaxEffect())
 
-    // Handle window resize
+    // Resize solo actualiza el centrado, no el tamaño del canvas
     window.addEventListener('resize', () => this.onWindowResize())
   }
 
@@ -153,10 +158,17 @@ export class SceneManager {
   }
 
   onWindowResize() {
-    this.camera.aspect = window.innerWidth / window.innerHeight
-    this.camera.updateProjectionMatrix()
-    this.renderer.setSize(window.innerWidth, window.innerHeight)
-    this.composer.setSize(window.innerWidth, window.innerHeight)
+    // El canvas tiene tamaño fijo (definido en .env), no se redimensiona.
+    // Solo sincronizamos por si acaso el contenedor cambió de posición.
+  }
+
+  /** Sincroniza planeDimensions de coordUtils con el tamaño real del VideoPlane */
+  syncPlaneDimensions() {
+    if (this.videoPlane) {
+      planeDimensions.width = this.videoPlane.planeWidth
+      planeDimensions.height = this.videoPlane.planeHeight
+      planeDimensions.z = -10
+    }
   }
 
   dispose() {
