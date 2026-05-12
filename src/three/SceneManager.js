@@ -24,10 +24,15 @@ export class SceneManager {
     this.isRunning = false
     this.startTime = Date.now()
     this.faceDetectionsRef = null  // Set externally from useFaceTracking
+    this.handDetectionsRef = null  // Set externally from useThreeScene
   }
 
   setFaceDetectionsRef(ref) {
     this.faceDetectionsRef = ref
+  }
+
+  setHandDetectionsRef(ref) {
+    this.handDetectionsRef = ref
   }
 
   init() {
@@ -89,7 +94,14 @@ export class SceneManager {
 
   registerEffect(name, effectInstance) {
     this.effects[name] = effectInstance
-    effectInstance.init(this.scene, this.composer)
+    const n = effectInstance.init.length
+    if (n >= 3) {
+      effectInstance.init(this.scene, this.renderer, this.camera)
+    } else if (n === 2) {
+      effectInstance.init(this.scene, this.composer)
+    } else {
+      effectInstance.init(this.scene)
+    }
   }
 
   getEffect(name) {
@@ -102,6 +114,16 @@ export class SceneManager {
     const parallax = this.effects['parallax']
     const faceLandmarks = this.faceDetectionsRef?.current ?? null
     if (parallax) parallax.setActive(active, faceLandmarks)
+  }
+
+  setPortalActive(active) {
+    const effect = this.effects['portal']
+    if (effect) effect.setActive(active)
+  }
+
+  setClapActive(active) {
+    const effect = this.effects['clap']
+    if (effect) effect.setActive(active)
   }
 
   setMirrorActive(active) {
@@ -149,11 +171,14 @@ export class SceneManager {
 
     // Read face landmarks from ref (updated by useFaceTracking)
     const faceLandmarks = this.faceDetectionsRef?.current ?? null
+    
+    // Read hand detections from ref (updated by useHandTracking)
+    const handDetections = this.handDetectionsRef?.current ?? null
 
     // Update all effects
     Object.values(this.effects).forEach((effect) => {
       if (effect.update) {
-        effect.update(deltaTime, faceLandmarks)
+        effect.update(deltaTime, faceLandmarks, handDetections)
       }
     })
 

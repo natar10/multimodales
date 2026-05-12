@@ -8,6 +8,8 @@ export function useThreeScene(containerRef, video) {
     snapActive,
     mirrorActive,
     spiderSenseActive,
+    verticalHandActive,
+    handLandmarksRef,
     faceLandmarksRef,
   } = useContext(AppContext)
 
@@ -21,6 +23,7 @@ export function useThreeScene(containerRef, video) {
     console.log('🏗️ SceneManager creating with video ready...')
     const sceneManager = new SceneManager(containerRef.current, video)
     sceneManager.setFaceDetectionsRef(faceLandmarksRef)
+    sceneManager.setHandDetectionsRef(handLandmarksRef)
     sceneManager.init()
     console.log('▶️ SceneManager init complete, calling start()...')
     sceneManager.start()
@@ -51,12 +54,21 @@ export function useThreeScene(containerRef, video) {
     }
   }, [mirrorActive])
 
+
   useEffect(() => {
     const manager = sceneManagerRef.current
     if (manager) {
       manager.setSpiderSenseActive(spiderSenseActive)
     }
   }, [spiderSenseActive])
+
+  useEffect(() => {
+    const manager = sceneManagerRef.current
+    if (manager) {
+      console.log('📡 Setting portal active to:', verticalHandActive)
+      manager.setPortalActive(verticalHandActive)
+    }
+  }, [verticalHandActive])
 
   return sceneManagerRef
 }

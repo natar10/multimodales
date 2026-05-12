@@ -1,13 +1,15 @@
 import { useEffect, useRef, useContext } from 'react'
 import { HandLandmarker, FilesetResolver } from '@mediapipe/tasks-vision'
 import { AppContext } from '../context/AppContext.jsx'
-import { triangleDetector } from '../gestures/triangleDetector.js'
-import { lGestureDetector } from '../gestures/lGestureDetector.js'
+import { snapDetector } from '../gestures/snapDetector.js'
+import { clapDetector } from '../gestures/clapDetector.js'
+import { verticalHandDetector } from '../gestures/verticalHandDetector.js'
 
 export function useHandTracking(video) {
   const handLandmarkerRef = useRef(null)
   const { handLandmarksRef, setSnapActive, setChismeListening,
-          setCurrentGestureLabel, addHistoryEvent } = useContext(AppContext)
+          setCurrentGestureLabel, addHistoryEvent, 
+          setVerticalHandActive } = useContext(AppContext)
   const isInitializingRef = useRef(false)
   const chismeListeningRef = useRef(false)
 
@@ -75,6 +77,10 @@ export function useHandTracking(video) {
                   setChismeListening(false)
                   setCurrentGestureLabel(null)
                 }
+
+                // Vertical Hand detection
+                const verticalDetected = verticalHandDetector.detect(results.landmarks)
+                setVerticalHandActive(verticalDetected)
               }
             } catch (error) {
               console.error('Hand detection error:', error)

@@ -10,6 +10,7 @@ export function AppProvider({ children }) {
   const [portalPosterIndex, setPortalPosterIndex] = useState(0)
   const [chismeListening, setChismeListening] = useState(false)
   const [chismeActive, setChismeActive] = useState(false)
+  const [verticalHandActive, setVerticalHandActive] = useState(false)
 
   // UI feedback state
   const [currentGestureLabel, setCurrentGestureLabel] = useState(null)
@@ -36,6 +37,8 @@ export function AppProvider({ children }) {
     setSpiderSenseActive,
     portalPosterIndex,
     setPortalPosterIndex,
+    verticalHandActive,
+    setVerticalHandActive,
     handLandmarksRef,
     faceLandmarksRef,
     faceBlendshapesRef,
