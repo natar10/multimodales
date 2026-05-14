@@ -82,7 +82,7 @@ export class SceneManager {
 
     // Initialize effects
     this.registerEffect('snap', new SnapAuraEffect())
-    // this.registerEffect('portal', new PortalEffect())
+    this.registerEffect('portal', new PortalEffect())
     // this.registerEffect('mirror', new MirrorEffect())
     this.registerEffect('spiderSense', new SpiderSenseEffect())
     this.registerEffect('parallax', new ParallaxEffect())

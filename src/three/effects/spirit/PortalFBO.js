@@ -35,7 +35,7 @@ export class PortalFBO {
     }
 
     this.fboScene = new THREE.Scene();
-    this.fboCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    this.fboCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
 
     const rawShaderPrefix = `precision ${this.renderer.capabilities.precision} float;\n`;
 
@@ -80,7 +80,7 @@ export class PortalFBO {
       minFilter: THREE.NearestFilter,
       magFilter: THREE.NearestFilter,
       format: THREE.RGBAFormat,
-      type: THREE.HalfFloatType, // HalfFloat is universally supported for FBOs
+      type: THREE.FloatType, // Use FloatType like the original
       depthWrite: false,
       depthBuffer: false,
       stencilBuffer: false
@@ -92,35 +92,58 @@ export class PortalFBO {
     this.defaultPositionTexture = this._createPositionTexture();
 
     // Init FBO with default positions
+    console.log('🔧 PortalFBO: Initializing FBO with defaultPositionTexture');
+
+    const wasAutoClear = this.renderer.autoClearColor;
+    this.renderer.autoClearColor = false;
+
+    this.quadMesh.material = this.copyShader;
     this.copyShader.uniforms.texture.value = this.defaultPositionTexture;
+
+    console.log('🔧 PortalFBO: Copying defaultPositionTexture to rtPosition1...');
     this.renderer.setRenderTarget(this.rtPosition1);
     this.renderer.render(this.fboScene, this.fboCamera);
-    
+    console.log('✅ PortalFBO: Rendered to rtPosition1');
+
+    console.log('🔧 PortalFBO: Copying defaultPositionTexture to rtPosition2...');
     this.renderer.setRenderTarget(this.rtPosition2);
     this.renderer.render(this.fboScene, this.fboCamera);
-    
+    console.log('✅ PortalFBO: Rendered to rtPosition2');
+
     this.renderer.setRenderTarget(null);
+    this.renderer.autoClearColor = wasAutoClear;
+
+    // Read back pixels to verify the copy worked
+    const readBuffer = new Float32Array(4);
+    this.renderer.readRenderTargetPixels(this.rtPosition1, 0, 0, 1, 1, readBuffer);
+    console.log('🔍 rtPosition1 first pixel after copy:', readBuffer);
+    // If all zeros → copy failed. If values like [-26, -24, -33, 0.99] → copy worked.
+
+    console.log('🔧 PortalFBO: FBO initialized, rtPosition1 and rtPosition2 ready');
   }
 
   _createPositionTexture() {
-    const positions = new Uint16Array(this.amount * 4);
+    const positions = new Float32Array(this.amount * 4);
     for (let i = 0; i < this.amount; i++) {
       const i4 = i * 4;
       const r = (0.5 + Math.random() * 0.5) * 50;
       const phi = (Math.random() - 0.5) * Math.PI;
       const theta = Math.random() * Math.PI * 2;
-      positions[i4 + 0] = THREE.DataUtils.toHalfFloat(r * Math.cos(theta) * Math.cos(phi));
-      positions[i4 + 1] = THREE.DataUtils.toHalfFloat(r * Math.sin(phi));
-      positions[i4 + 2] = THREE.DataUtils.toHalfFloat(r * Math.sin(theta) * Math.cos(phi));
-      positions[i4 + 3] = THREE.DataUtils.toHalfFloat(Math.random()); // Life
+      positions[i4 + 0] = r * Math.cos(theta) * Math.cos(phi);
+      positions[i4 + 1] = r * Math.sin(phi);
+      positions[i4 + 2] = r * Math.sin(theta) * Math.cos(phi);
+      positions[i4 + 3] = Math.random(); // Life
     }
 
-    const texture = new THREE.DataTexture(positions, this.textureWidth, this.textureHeight, THREE.RGBAFormat, THREE.HalfFloatType);
+    const texture = new THREE.DataTexture(positions, this.textureWidth, this.textureHeight, THREE.RGBAFormat, THREE.FloatType);
     texture.minFilter = THREE.NearestFilter;
     texture.magFilter = THREE.NearestFilter;
     texture.needsUpdate = true;
     texture.generateMipmaps = false;
     texture.flipY = false;
+
+    console.log('🔧 PortalFBO: Created defaultPositionTexture with', this.amount, 'particles, first value:', positions.slice(0, 4));
+
     return texture;
   }
 
@@ -143,15 +166,14 @@ export class PortalFBO {
           texturePosition: { value: null },
           color1: { value: new THREE.Color(settings.color1) },
           color2: { value: new THREE.Color(settings.color2) },
-          particleSize: { value: settings.particleSize !== undefined ? settings.particleSize : 80.0 }
+          particleSize: { value: settings.particleSize }
         }
       ]),
       vertexShader: particlesVert,
       fragmentShader: particlesFrag,
-      blending: THREE.NormalBlending,
+      blending: THREE.AdditiveBlending,
       transparent: true,
-      depthWrite: false,
-      depthTest: true
+      depthWrite: false
     });
 
     this.particleMesh = new THREE.Points(geometry, this.particleMaterial);
@@ -173,14 +195,14 @@ export class PortalFBO {
     // ThreeJS world space varies. We'll map it relative to camera frustum.
     // X is flipped because the webcam feed is mirrored!
 
-    const v = new THREE.Vector3( (0.5 - x) * 2, -(y - 0.5) * 2, 0.5 );
+    const v = new THREE.Vector3( (0.4 - x) * 2, -(y - 0.5) * 2, 0.5 );
     v.unproject(this.camera);
     const dir = v.sub(this.camera.position).normalize();
     const distance = -this.camera.position.z / dir.z;
     const targetPos = this.camera.position.clone().add(dir.multiplyScalar(distance * 0.9)); // A bit in front of the camera
 
-    // Smoothly track hand
-    this.mouse3d.lerp(targetPos, 0.15);
+    // Smoothly track hand (0.3 = snappier tracking)
+    this.mouse3d.lerp(targetPos, 0.3);
 
     // Particle Ring always stays flat facing the camera
     this.group.quaternion.copy(this.camera.quaternion);
@@ -195,13 +217,20 @@ export class PortalFBO {
 
     this.particleMesh.visible = this.initAnimation > 0;
 
+    // ALWAYS update particle material uniforms, even if initAnimation is 0
+    this.particleMaterial.uniforms.texturePosition.value = this.rtPosition1.texture;
+    this.particleMaterial.uniforms.particleSize.value = settings.particleSize;
+
     if (this.initAnimation === 0) {
       return;
     }
 
     // Debug: log animation progress every 0.5 seconds
     if (Math.floor(this.positionShader.uniforms.time.value * 10) % 5 === 0) {
-      console.log('✨ PortalFBO - initAnimation:', this.initAnimation.toFixed(2), 'active:', this.active, 'mouse3d:', this.mouse3d);
+      const hasTex = this.particleMaterial.uniforms.texturePosition.value !== null;
+      console.log('✨ PortalFBO - initAnimation:', this.initAnimation.toFixed(2),
+        'active:', this.active, 'hasTexture:', hasTex,
+        'particleCount:', this.amount, 'mouse3d:', this.mouse3d);
     }
 
     // GPGPU Update Loop
@@ -210,10 +239,15 @@ export class PortalFBO {
     this.rtPosition1 = this.rtPosition2;
     this.rtPosition2 = tmp;
 
+    // Scale speed by deltaTime ratio (matching original: dt was in ms, ratio = dt/16.6667)
+    const deltaRatio = (dt * 1000) / 16.6667;
+
     this.quadMesh.material = this.positionShader;
     this.positionShader.uniforms.textureDefaultPosition.value = this.defaultPositionTexture;
-    this.positionShader.uniforms.texturePosition.value = this.rtPosition2;
-    this.positionShader.uniforms.time.value += dt * 0.5; // Scale time for better speed
+    this.positionShader.uniforms.texturePosition.value = this.rtPosition2.texture;
+    this.positionShader.uniforms.time.value += dt * 0.001;
+    this.positionShader.uniforms.speed.value = settings.speed * deltaRatio;
+    this.positionShader.uniforms.dieSpeed.value = settings.dieSpeed * deltaRatio;
     this.positionShader.uniforms.initAnimation.value = this.initAnimation;
     this.positionShader.uniforms.mouse3d.value.copy(this.mouse3d);
     
@@ -231,8 +265,8 @@ export class PortalFBO {
     this.renderer.setRenderTarget(currentRenderTarget);
     this.renderer.autoClearColor = autoClearColor;
 
-    // Pass new positions to particle material
-    this.particleMaterial.uniforms.texturePosition.value = this.rtPosition1;
+    // Update rtPosition1 reference for next frame (done again here for clarity)
+    this.particleMaterial.uniforms.texturePosition.value = this.rtPosition1.texture;
   }
 
   dispose() {

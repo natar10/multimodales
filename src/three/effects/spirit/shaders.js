@@ -153,10 +153,10 @@ void main() {
     vec2 uv = gl_FragCoord.xy / resolution.xy;
 
     vec4 positionInfo = texture2D( texturePosition, uv );
-    vec3 position = mix(vec3(0.0, -200.0, 0.0), positionInfo.xyz, smoothstep(0.0, 0.3, initAnimation));
+    vec3 position = mix(vec3(0.0, -3.0, 0.0), positionInfo.xyz, smoothstep(0.0, 0.3, initAnimation));
     float life = positionInfo.a - dieSpeed;
 
-    vec3 followPosition = mix(vec3(0.0, -(1.0 - initAnimation) * 200.0, 0.0), mouse3d, smoothstep(0.2, 0.7, initAnimation));
+    vec3 followPosition = mix(vec3(0.0, -(1.0 - initAnimation) * 3.0, 0.0), mouse3d, smoothstep(0.2, 0.7, initAnimation));
 
     if(life < 0.0) {
         positionInfo = texture2D( textureDefaultPosition, uv );
@@ -222,9 +222,6 @@ void main() {
     vec3 outgoingLight = mix(color2, color1, smoothstep(0.0, 0.7, vLife));
 
     // chunk(shadowmap_fragment);
-
-    // outgoingLight *= shadowMask;//pow(shadowMask, vec3(0.75));
-
     // chunk(fog_fragment);
     // chunk(linear_to_gamma_fragment);
 

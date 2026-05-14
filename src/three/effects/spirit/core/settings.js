@@ -3,24 +3,24 @@ import * as THREE from 'three';
 export const useStats = false;
 export const isMobile = /(iPad|iPhone|Android)/i.test(navigator.userAgent);
 
-// Hardcode 65k particles for decent performance/looks
-export const simulatorTextureWidth = 256;
-export const simulatorTextureHeight = 256;
+// 16k particles for better performance
+export const simulatorTextureWidth = 128;
+export const simulatorTextureHeight = 128;
 
-export const useTriangleParticles = true;
+export const useTriangleParticles = false;
 export const followMouse = true;
 
-export const speed = 1;
+export const speed = 0.3;
 export const dieSpeed = 0.015;
-export const radius = 0.6; // derived from 65k amount mapping
+export const radius = 0.04;
 export const curlSize = 0.02;
-export const attraction = 1;
-export const particleSize = 80.0; // Cambia este valor para ajustar el tamaño de cada chispa
+export const attraction = 2.0;
+export const particleSize = 10.0;
 export const shadowDarkness = 0.45;
 
 export const bgColor = '#000000';
-export const color1 = '#ff7b00'; // Dr. Strange portal orange!
-export const color2 = '#ffb700'; // Dr. Strange portal yellow!
+export const color1 = '#e3a650';
+export const color2 = '#ffff00';
 
 export const fxaa = false;
 export const motionBlurQualityMap = {
@@ -35,7 +35,7 @@ export const motionBlurPause = false;
 export const bloom = true;
 
 export const query = {
-    amount: '65k',
+    amount: '16k',
     motionBlurQuality: 'medium'
 };
 
