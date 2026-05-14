@@ -65,8 +65,8 @@ function AppContent() {
   // Only initialize hand tracking AFTER video is ready
   useHandTracking(videoReady ? videoRef.current : null)
 
-  // Initialize face tracking (lazy load when snapActive or clapActive)
-  useFaceTracking(videoReady ? videoRef.current : null, snapActive || clapActive)
+  // Initialize face tracking (always active for expression detection, but runs at 30fps)
+  useFaceTracking(videoReady ? videoRef.current : null, true)
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000' }}>

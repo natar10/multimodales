@@ -120,14 +120,17 @@ export class ParallaxEffect {
     scene.add(this.group)
   }
 
-  update(delta, faceDetections) {
+  update(delta, faceLandmarks) {
     if (!this.isActive) return
     this.time += delta
 
-    if (faceDetections && faceDetections.length > 0) {
-      const kps = faceDetections[0].keypoints
-      if (kps && kps.length >= 2) {
-        const center = keypointCenter(kps[0], kps[1])
+    if (faceLandmarks && faceLandmarks.length > 0) {
+      // Usamos landmark 33 (ojo izquierdo) y 263 (ojo derecho) de FaceLandmarker
+      const leftEye = faceLandmarks[33]
+      const rightEye = faceLandmarks[263]
+      
+      if (leftEye && rightEye) {
+        const center = keypointCenter(leftEye, rightEye)
         const wx = (0.5 - center.x) * planeDimensions.width
         const wy = (0.5 - center.y) * planeDimensions.height
         this.posHistory.push({ x: wx, y: wy })
@@ -155,15 +158,16 @@ export class ParallaxEffect {
     }
   }
 
-  setActive(active, faceDetections) {
+  setActive(active, faceLandmarks) {
     this.isActive = active
     if (active) {
       // Pre-llenar el historial con la posición actual de la cara
       // para evitar el salto brusco en el primer frame
-      if (faceDetections && faceDetections.length > 0) {
-        const kps = faceDetections[0].keypoints
-        if (kps && kps.length >= 2) {
-          const center = keypointCenter(kps[0], kps[1])
+      if (faceLandmarks && faceLandmarks.length > 0) {
+        const leftEye = faceLandmarks[33]
+        const rightEye = faceLandmarks[263]
+        if (leftEye && rightEye) {
+          const center = keypointCenter(leftEye, rightEye)
           const wx = (0.5 - center.x) * planeDimensions.width
           const wy = (0.5 - center.y) * planeDimensions.height
           this.posHistory = Array(SMOOTH_FRAMES).fill({ x: wx, y: wy })

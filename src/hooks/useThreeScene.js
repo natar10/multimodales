@@ -8,6 +8,7 @@ export function useThreeScene(containerRef, video) {
     snapActive,
     clapActive,
     mirrorActive,
+    spiderSenseActive,
     faceLandmarksRef,
   } = useContext(AppContext)
 
@@ -40,7 +41,6 @@ export function useThreeScene(containerRef, video) {
   useEffect(() => {
     const manager = sceneManagerRef.current
     if (manager) {
-      console.log('📡 Setting snap active to:', snapActive)
       manager.setSnapActive(snapActive)
     }
   }, [snapActive])
@@ -48,7 +48,6 @@ export function useThreeScene(containerRef, video) {
   useEffect(() => {
     const manager = sceneManagerRef.current
     if (manager) {
-      console.log('📡 Setting clap active to:', clapActive)
       manager.setClapActive(clapActive)
     }
   }, [clapActive])
@@ -56,10 +55,16 @@ export function useThreeScene(containerRef, video) {
   useEffect(() => {
     const manager = sceneManagerRef.current
     if (manager) {
-      console.log('📡 Setting mirror active to:', mirrorActive)
       manager.setMirrorActive(mirrorActive)
     }
   }, [mirrorActive])
+
+  useEffect(() => {
+    const manager = sceneManagerRef.current
+    if (manager) {
+      manager.setSpiderSenseActive(spiderSenseActive)
+    }
+  }, [spiderSenseActive])
 
   return sceneManagerRef
 }

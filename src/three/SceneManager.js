@@ -100,8 +100,8 @@ export class SceneManager {
     const effect = this.effects['snap']
     if (effect) effect.setActive(active)
     const parallax = this.effects['parallax']
-    const faceDetections = this.faceDetectionsRef?.current ?? null
-    if (parallax) parallax.setActive(active, faceDetections)
+    const faceLandmarks = this.faceDetectionsRef?.current ?? null
+    if (parallax) parallax.setActive(active, faceLandmarks)
   }
 
   setClapActive(active) {
@@ -111,6 +111,11 @@ export class SceneManager {
 
   setMirrorActive(active) {
     const effect = this.effects['mirror']
+    if (effect) effect.setActive(active)
+  }
+
+  setSpiderSenseActive(active) {
+    const effect = this.effects['spiderSense']
     if (effect) effect.setActive(active)
   }
 
@@ -141,13 +146,13 @@ export class SceneManager {
       this.videoPlane.update()
     }
 
-    // Read face detections from ref (updated by useFaceTracking)
-    const faceDetections = this.faceDetectionsRef?.current ?? null
+    // Read face landmarks from ref (updated by useFaceTracking)
+    const faceLandmarks = this.faceDetectionsRef?.current ?? null
 
     // Update all effects
     Object.values(this.effects).forEach((effect) => {
       if (effect.update) {
-        effect.update(deltaTime, faceDetections)
+        effect.update(deltaTime, faceLandmarks)
       }
     })
 

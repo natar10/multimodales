@@ -13,6 +13,7 @@ export function AppProvider({ children }) {
   // Landmarks (NO useState — refs para evitar re-renders a 30fps)
   const handLandmarksRef = useRef(null)
   const faceLandmarksRef = useRef(null)
+  const faceBlendshapesRef = useRef(null)
 
   const value = {
     snapActive,
@@ -27,6 +28,7 @@ export function AppProvider({ children }) {
     setPortalPosterIndex,
     handLandmarksRef,
     faceLandmarksRef,
+    faceBlendshapesRef,
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>
