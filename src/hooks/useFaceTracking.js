@@ -9,6 +9,8 @@ export function useFaceTracking(video, shouldInitialize) {
   const isInitializingRef = useRef(false)
   const frameCountRef = useRef(0)
   const animFrameRef = useRef(null)
+  const expressionHoldStartRef = useRef(null)
+  const SPIDER_SENSE_HOLD_MS = parseInt(import.meta.env.VITE_SPIDER_SENSE_HOLD_MS) || 50
 
   useEffect(() => {
     if (!video || !shouldInitialize) {
@@ -67,9 +69,18 @@ export function useFaceTracking(video, shouldInitialize) {
                     const blendshapes = result.faceBlendshapes[0].categories
                     faceBlendshapesRef.current = blendshapes
 
-                    // Detect Amazement Expression
+                    // Detect Amazement Expression con hold mínimo anti-falsos-positivos
                     const isAmazed = expressionDetector.detectAmazement(blendshapes, frameCountRef.current)
-                    setSpiderSenseActive(isAmazed)
+                    if (isAmazed) {
+                      if (expressionHoldStartRef.current === null) {
+                        expressionHoldStartRef.current = performance.now()
+                      } else if (performance.now() - expressionHoldStartRef.current >= SPIDER_SENSE_HOLD_MS) {
+                        setSpiderSenseActive(true)
+                      }
+                    } else {
+                      expressionHoldStartRef.current = null
+                      setSpiderSenseActive(false)
+                    }
                   }
                 } else {
                   faceLandmarksRef.current = null
