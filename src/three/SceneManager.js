@@ -76,12 +76,12 @@ export class SceneManager {
     this.scene.add(ambientLight)
 
     // Initialize effects
-    this.registerEffect('snap', new SnapAuraEffect())
-    this.registerEffect('portal', new PortalEffect())
-    this.registerEffect('clap', new BubblesEffect())
-    this.registerEffect('mirror', new MirrorEffect())
+    // this.registerEffect('snap', new SnapAuraEffect())
+    // this.registerEffect('portal', new PortalEffect())
+    // this.registerEffect('clap', new BubblesEffect())
+    // this.registerEffect('mirror', new MirrorEffect())
     this.registerEffect('spiderSense', new SpiderSenseEffect())
-    this.registerEffect('parallax', new ParallaxEffect())
+    // this.registerEffect('parallax', new ParallaxEffect())
 
     // Resize solo actualiza el centrado, no el tamaño del canvas
     window.addEventListener('resize', () => this.onWindowResize())
