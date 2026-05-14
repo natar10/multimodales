@@ -25,7 +25,7 @@ export const expressionDetector = {
 
     // Log para debuguear la nueva cara
     if (frameCount % 30 === 0) {
-        console.log(`Skeptic Scores - Squint: ${Math.max(eyeSquintL, eyeSquintR).toFixed(2)}, Brows: ${Math.max(browDownL, browDownR).toFixed(2)}, Mouth: ${jawOpen.toFixed(2)}`)
+        // console.log(`Skeptic Scores - Squint: ${Math.max(eyeSquintL, eyeSquintR).toFixed(2)}, Brows: ${Math.max(browDownL, browDownR).toFixed(2)}, Mouth: ${jawOpen.toFixed(2)}`)
     }
 
     // Para la expresión de la imagen: Ojos achinados + cejas fruncidas + boca cerrada

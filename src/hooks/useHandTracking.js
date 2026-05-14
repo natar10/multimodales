@@ -1,7 +1,7 @@
 import { useEffect, useRef, useContext } from 'react'
 import { HandLandmarker, FilesetResolver } from '@mediapipe/tasks-vision'
 import { AppContext } from '../context/AppContext.jsx'
-import { snapDetector } from '../gestures/snapDetector.js'
+import { triangleDetector } from '../gestures/triangleDetector.js'
 import { clapDetector } from '../gestures/clapDetector.js'
 
 export function useHandTracking(video) {
@@ -41,14 +41,13 @@ export function useHandTracking(video) {
 
               // Detect gestures
               if (results.landmarks && results.landmarks.length > 0) {
-                const primaryHand = results.landmarks[0]
 
-                // Snap detection (single hand)
-                const snapDetected = snapDetector.detect(primaryHand)
-                if (snapDetected) {
+                // Triangle gesture detection (two hands)
+                const triangleDetected = triangleDetector.detect(results.landmarks)
+                if (triangleDetected) {
                   setSnapActive((prev) => {
                     const newState = !prev
-                    console.log('🤏 SNAP detected! New state:', newState)
+                    console.log('🔺 TRIANGLE detected! New state:', newState)
                     return newState
                   })
                 }
