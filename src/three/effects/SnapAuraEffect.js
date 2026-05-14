@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
-import { normalizedToWorld, keypointCenter, planeDimensions } from '../../utils/coordUtils.js'
+import { normalizedToWorld } from '../../utils/coordUtils.js'
 
 const loader = new GLTFLoader()
 // Cache desactivado para que este loader no interfiera con ParallaxEffect
@@ -63,24 +63,25 @@ export class SnapAuraEffect {
     console.log('✅ SnapAuraEffect initialized')
   }
 
-  update(delta, faceDetections) {
+  update(delta, faceLandmarks) {
     this.time += delta
 
     if (this.isActive) {
-      // Update forehead position from face detection
-      if (faceDetections && faceDetections.length > 0) {
-        const detection = faceDetections[0]
-        const kps = detection.keypoints
-        if (kps && kps.length >= 2) {
-          const center = keypointCenter(kps[0], kps[1])
-          const eyeToNoseY = kps.length >= 3 ? Math.abs(kps[2].y - center.y) : 0.04
-          const foreheadOffset = eyeToNoseY * planeDimensions.height * 1.5
-          const world = normalizedToWorld(center.x, center.y, 0.5)
+      // Posicionar el chakra en el centro de la frente (tercer ojo)
+      // Landmark 168: glabella (entre las cejas)
+      // Landmark 10:  cima de la cabeza
+      // Tercer ojo = 35% del camino desde la glabella hacia la cima
+      if (faceLandmarks && faceLandmarks[168] && faceLandmarks[10]) {
+        const glabella = faceLandmarks[168]
+        const topHead  = faceLandmarks[10]
 
-          this.chakraGroup.position.x += (world.x - this.chakraGroup.position.x) * 0.15
-          this.chakraGroup.position.y += ((world.y + foreheadOffset) - this.chakraGroup.position.y) * 0.15
-          this.chakraGroup.position.z = world.z
-        }
+        const tx = glabella.x + (topHead.x - glabella.x) * 0.35
+        const ty = glabella.y + (topHead.y - glabella.y) * 0.35
+        const world = normalizedToWorld(tx, ty, 0.5)
+
+        this.chakraGroup.position.x += (world.x - this.chakraGroup.position.x) * 0.15
+        this.chakraGroup.position.y += (world.y - this.chakraGroup.position.y) * 0.15
+        this.chakraGroup.position.z = world.z
       }
 
       // Spin chakra
