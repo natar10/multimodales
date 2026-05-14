@@ -21,6 +21,8 @@ const LM_RIGHT = 454  // sien derecha   (del usuario → aparece a la izquierda 
 // Centro: nariz
 const LM_NOSE  = [1, 4, 5, 6, 168]
 
+const FADE_OUT_DURATION = 0.9  // segundos de fade-out al desactivar
+
 export class SpiderSenseEffect {
   constructor() {
     this.group = new THREE.Group()
@@ -28,6 +30,11 @@ export class SpiderSenseEffect {
     this.isActive = false
     this.time = 0
     this.numSegments = 5
+
+    this._audio = new Audio('/spiderman-tutururu.mp3')
+    this._audio.loop = true
+    this._fadeOut = false
+    this._fadeTimer = 0
   }
 
   init(scene) {
@@ -105,6 +112,17 @@ export class SpiderSenseEffect {
   }
 
   update(delta, faceLandmarks) {
+    // Fade-out del audio cuando se desactiva
+    if (this._fadeOut) {
+      this._fadeTimer += delta
+      this._audio.volume = Math.max(0, 1 - this._fadeTimer / FADE_OUT_DURATION)
+      if (this._fadeTimer >= FADE_OUT_DURATION) {
+        this._audio.pause()
+        this._audio.currentTime = 0
+        this._fadeOut = false
+      }
+    }
+
     if (!this.isActive || !faceLandmarks) return
     this.time += delta
 
@@ -167,9 +185,22 @@ export class SpiderSenseEffect {
   setActive(active) {
     this.isActive = active
     this.group.visible = active
+
+    if (active) {
+      this._fadeOut = false
+      this._fadeTimer = 0
+      this._audio.volume = 1
+      this._audio.currentTime = 0
+      this._audio.play().catch(() => {})
+    } else {
+      this._fadeOut = true
+      this._fadeTimer = 0
+    }
   }
 
   dispose() {
+    this._audio.pause()
+    this._audio.src = ''
     this.bolts.forEach(b => {
       b.outerMesh.geometry.dispose()
       b.outerMesh.material.dispose()
