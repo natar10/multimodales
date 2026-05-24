@@ -10,6 +10,8 @@ export function useThreeScene(containerRef, video) {
     mirrorActive,
     spiderSenseActive,
     faceLandmarksRef,
+    chismeActive,
+    setChismeActive,
   } = useContext(AppContext)
 
   // Initialize SceneManager ONLY when video is ready
@@ -65,6 +67,13 @@ export function useThreeScene(containerRef, video) {
       manager.setSpiderSenseActive(spiderSenseActive)
     }
   }, [spiderSenseActive])
+
+  useEffect(() => {
+    if (chismeActive && sceneManagerRef.current) {
+      sceneManagerRef.current.setChismeActive(true)
+      setChismeActive(false)  // reset immediately so it can be re-triggered
+    }
+  }, [chismeActive, setChismeActive])
 
   return sceneManagerRef
 }

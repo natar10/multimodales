@@ -1,14 +1,15 @@
-import React, { useRef, useEffect, useState } from 'react'
+import React, { useRef, useEffect, useState, useCallback } from 'react'
 import { AppProvider, AppContext } from './context/AppContext.jsx'
 import { CanvasOverlay } from './components/CanvasOverlay.jsx'
 import { useThreeScene } from './hooks/useThreeScene.js'
 import { useHandTracking } from './hooks/useHandTracking.js'
 import { useFaceTracking } from './hooks/useFaceTracking.js'
+import { useSpeechRecognition } from './hooks/useSpeechRecognition.js'
 
 function AppContent() {
   const canvasRef = useRef(null)
   const videoRef = useRef(null)
-  const { snapActive, clapActive } = React.useContext(AppContext)
+  const { snapActive, clapActive, chismeListening, setChismeActive } = React.useContext(AppContext)
   const [videoReady, setVideoReady] = useState(false)
 
   // Initialize video stream
@@ -68,6 +69,9 @@ function AppContent() {
   // Initialize face tracking (always active for expression detection, but runs at 30fps)
   useFaceTracking(videoReady ? videoRef.current : null, true)
 
+  const onChismePhrase = useCallback(() => setChismeActive(true), [setChismeActive])
+  useSpeechRecognition({ isListening: chismeListening, onPhrase: onChismePhrase })
+
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000' }}>
       <CanvasOverlay ref={canvasRef} />
@@ -100,6 +104,27 @@ function AppContent() {
         <div>Snap: {snapActive ? '🟢' : '⚪'}</div>
         <div>Clap: {clapActive ? '🟢' : '⚪'}</div>
       </div>
+
+      {/* Mic listening indicator */}
+      {chismeListening && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 16,
+            left: 16,
+            color: 'white',
+            background: 'rgba(0,0,0,0.65)',
+            padding: '5px 12px',
+            borderRadius: 8,
+            fontSize: 13,
+            fontFamily: 'monospace',
+            zIndex: 100,
+            pointerEvents: 'none',
+          }}
+        >
+          🎤 escuchando...
+        </div>
+      )}
     </div>
   )
 }

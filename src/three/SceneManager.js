@@ -8,6 +8,7 @@ import { BubblesEffect } from './effects/BubblesEffect.js'
 import { MirrorEffect } from './effects/MirrorEffect.js'
 import { SpiderSenseEffect } from './effects/SpiderSenseEffect.js'
 import { ParallaxEffect } from './effects/ParallaxEffect.js'
+import { ChismePotente } from './effects/ChismePotente.js'
 import { planeDimensions } from '../utils/coordUtils.js'
 
 export class SceneManager {
@@ -82,6 +83,7 @@ export class SceneManager {
     // this.registerEffect('mirror', new MirrorEffect())
     this.registerEffect('spiderSense', new SpiderSenseEffect())
     this.registerEffect('parallax', new ParallaxEffect())
+    this.registerEffect('chismePotente', new ChismePotente())
 
     // Resize solo actualiza el centrado, no el tamaño del canvas
     window.addEventListener('resize', () => this.onWindowResize())
@@ -89,7 +91,7 @@ export class SceneManager {
 
   registerEffect(name, effectInstance) {
     this.effects[name] = effectInstance
-    effectInstance.init(this.scene)
+    effectInstance.init(this.scene, this.composer)
   }
 
   getEffect(name) {
@@ -116,6 +118,11 @@ export class SceneManager {
 
   setSpiderSenseActive(active) {
     const effect = this.effects['spiderSense']
+    if (effect) effect.setActive(active)
+  }
+
+  setChismeActive(active) {
+    const effect = this.effects['chismePotente']
     if (effect) effect.setActive(active)
   }
 

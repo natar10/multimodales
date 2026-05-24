@@ -9,6 +9,8 @@ export function AppProvider({ children }) {
   const [mirrorActive, setMirrorActive] = useState(false)
   const [spiderSenseActive, setSpiderSenseActive] = useState(false)
   const [portalPosterIndex, setPortalPosterIndex] = useState(0)
+  const [chismeListening, setChismeListening] = useState(false)
+  const [chismeActive, setChismeActive] = useState(false)
 
   // Landmarks (NO useState — refs para evitar re-renders a 30fps)
   const handLandmarksRef = useRef(null)
@@ -29,6 +31,10 @@ export function AppProvider({ children }) {
     handLandmarksRef,
     faceLandmarksRef,
     faceBlendshapesRef,
+    chismeListening,
+    setChismeListening,
+    chismeActive,
+    setChismeActive,
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>
