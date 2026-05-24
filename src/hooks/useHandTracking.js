@@ -6,7 +6,8 @@ import { lGestureDetector } from '../gestures/lGestureDetector.js'
 
 export function useHandTracking(video) {
   const handLandmarkerRef = useRef(null)
-  const { handLandmarksRef, setSnapActive, setChismeListening } = useContext(AppContext)
+  const { handLandmarksRef, setSnapActive, setChismeListening,
+          setCurrentGestureLabel, addHistoryEvent } = useContext(AppContext)
   const isInitializingRef = useRef(false)
   const chismeListeningRef = useRef(false)
 
@@ -51,6 +52,7 @@ export function useHandTracking(video) {
                     console.log('🔺 TRIANGLE detected! New state:', newState)
                     return newState
                   })
+                  addHistoryEvent({ label: 'Tercer Ojo activado', icon: '🔺' })
                 }
 
                 // L-gesture (right hand) → activates voice listening
@@ -58,6 +60,12 @@ export function useHandTracking(video) {
                 if (isHeld !== chismeListeningRef.current) {
                   chismeListeningRef.current = isHeld
                   setChismeListening(isHeld)
+                  if (isHeld) {
+                    setCurrentGestureLabel('gesto L')
+                    addHistoryEvent({ label: 'Escucha de voz activada', icon: '🤙' })
+                  } else {
+                    setCurrentGestureLabel(null)
+                  }
                   console.log(isHeld ? '🤙 Gesto L — escucha activada' : '🤙 Gesto L soltado')
                 }
               } else {
@@ -65,6 +73,7 @@ export function useHandTracking(video) {
                 if (chismeListeningRef.current) {
                   chismeListeningRef.current = false
                   setChismeListening(false)
+                  setCurrentGestureLabel(null)
                 }
               }
             } catch (error) {
@@ -89,7 +98,8 @@ export function useHandTracking(video) {
       }
       isInitializingRef.current = false  // Reset para permitir reinicialización
     }
-  }, [video, handLandmarksRef, setSnapActive, setChismeListening])
+  }, [video, handLandmarksRef, setSnapActive, setChismeListening,
+      setCurrentGestureLabel, addHistoryEvent])
 
   return handLandmarkerRef
 }

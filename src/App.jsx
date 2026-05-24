@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react'
 import { AppProvider, AppContext } from './context/AppContext.jsx'
-import { CanvasOverlay } from './components/CanvasOverlay.jsx'
+import { StreamLayout } from './components/StreamLayout.jsx'
 import { useThreeScene } from './hooks/useThreeScene.js'
 import { useHandTracking } from './hooks/useHandTracking.js'
 import { useFaceTracking } from './hooks/useFaceTracking.js'
@@ -9,7 +9,7 @@ import { useSpeechRecognition } from './hooks/useSpeechRecognition.js'
 function AppContent() {
   const canvasRef = useRef(null)
   const videoRef = useRef(null)
-  const { snapActive, chismeListening } = React.useContext(AppContext)
+  const { chismeListening, setChismeActive, addHistoryEvent } = React.useContext(AppContext)
   const [videoReady, setVideoReady] = useState(false)
 
   // Initialize video stream
@@ -70,66 +70,28 @@ function AppContent() {
   useFaceTracking(videoReady ? videoRef.current : null, true)
 
   // Call SceneManager directly — skip React state to avoid ~37ms batching delay
+  // Also update React state for UI feedback (no perf concern for UI)
   const onChismePhrase = useCallback(() => {
     const t0 = window.__chismeT0 ?? 0
     console.log(`[CHISME] T1 callback → sceneManager directo  +${(performance.now() - t0).toFixed(1)}ms desde T0`)
     sceneManagerRef.current?.setChismeActive(true)
-  }, [sceneManagerRef])
+    setChismeActive(true)
+    addHistoryEvent({ label: '¡Chisme Potente!', icon: '📯' })
+    setTimeout(() => setChismeActive(false), 3500)
+  }, [sceneManagerRef, setChismeActive, addHistoryEvent])
   useSpeechRecognition({ isListening: chismeListening, onPhrase: onChismePhrase })
 
   return (
-    <div style={{ width: '100vw', height: '100vh', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000' }}>
-      <CanvasOverlay ref={canvasRef} />
-
-      {/* Video element */}
+    <>
+      <StreamLayout canvasRef={canvasRef} />
       <video
         ref={videoRef}
-        style={{
-          display: 'none',
-        }}
+        style={{ display: 'none' }}
         playsInline
         autoPlay
         muted
       />
-
-      {/* Status text */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 10,
-          left: 10,
-          color: '#00ff88',
-          fontSize: '12px',
-          fontFamily: 'monospace',
-          zIndex: 100,
-          pointerEvents: 'none',
-        }}
-      >
-        <div>Status: {videoReady ? '✅ Ready' : '⏳ Loading'}</div>
-        <div>Snap: {snapActive ? '🟢' : '⚪'}</div>
-      </div>
-
-      {/* Mic listening indicator */}
-      {chismeListening && (
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 16,
-            left: 16,
-            color: 'white',
-            background: 'rgba(0,0,0,0.65)',
-            padding: '5px 12px',
-            borderRadius: 8,
-            fontSize: 13,
-            fontFamily: 'monospace',
-            zIndex: 100,
-            pointerEvents: 'none',
-          }}
-        >
-          🎤 escuchando...
-        </div>
-      )}
-    </div>
+    </>
   )
 }
 

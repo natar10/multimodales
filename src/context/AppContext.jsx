@@ -1,4 +1,4 @@
-import React, { createContext, useState, useRef } from 'react'
+import React, { createContext, useState, useRef, useCallback } from 'react'
 
 export const AppContext = createContext()
 
@@ -10,6 +10,17 @@ export function AppProvider({ children }) {
   const [portalPosterIndex, setPortalPosterIndex] = useState(0)
   const [chismeListening, setChismeListening] = useState(false)
   const [chismeActive, setChismeActive] = useState(false)
+
+  // UI feedback state
+  const [currentGestureLabel, setCurrentGestureLabel] = useState(null)
+  const [currentExpressionLabel, setCurrentExpressionLabel] = useState('neutral')
+  const [eventHistory, setEventHistory] = useState([])
+
+  const addHistoryEvent = useCallback(({ label, icon }) => {
+    setEventHistory(prev =>
+      [{ id: Date.now(), label, icon, timestamp: new Date() }, ...prev].slice(0, 5)
+    )
+  }, [])
 
   // Landmarks (NO useState — refs para evitar re-renders a 30fps)
   const handLandmarksRef = useRef(null)
@@ -32,6 +43,12 @@ export function AppProvider({ children }) {
     setChismeListening,
     chismeActive,
     setChismeActive,
+    currentGestureLabel,
+    setCurrentGestureLabel,
+    currentExpressionLabel,
+    setCurrentExpressionLabel,
+    eventHistory,
+    addHistoryEvent,
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>

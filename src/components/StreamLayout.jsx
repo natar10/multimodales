@@ -1,0 +1,17 @@
+import React from 'react'
+import { CanvasOverlay } from './CanvasOverlay.jsx'
+import { HUDOverlay } from './HUDOverlay.jsx'
+import { ModalitiesPanel } from './ModalitiesPanel.jsx'
+import '../styles/panel.css'
+
+export function StreamLayout({ canvasRef }) {
+  return (
+    <div className="stream-layout">
+      <div className="canvas-panel">
+        <CanvasOverlay ref={canvasRef} />
+        <HUDOverlay />
+      </div>
+      <ModalitiesPanel />
+    </div>
+  )
+}

@@ -5,11 +5,14 @@ import { expressionDetector } from '../gestures/expressionDetector.js'
 
 export function useFaceTracking(video, shouldInitialize) {
   const faceLandmarkerRef = useRef(null)
-  const { faceLandmarksRef, faceBlendshapesRef, setSpiderSenseActive } = useContext(AppContext)
+  const { faceLandmarksRef, faceBlendshapesRef, setSpiderSenseActive,
+          setCurrentExpressionLabel, addHistoryEvent } = useContext(AppContext)
   const isInitializingRef = useRef(false)
   const frameCountRef = useRef(0)
   const animFrameRef = useRef(null)
   const expressionHoldStartRef = useRef(null)
+  const prevExpressionRef = useRef('neutral')
+  const spiderSenseHistoryFiredRef = useRef(false)
   const SPIDER_SENSE_HOLD_MS = parseInt(import.meta.env.VITE_SPIDER_SENSE_HOLD_MS) || 50
 
   useEffect(() => {
@@ -71,14 +74,27 @@ export function useFaceTracking(video, shouldInitialize) {
 
                     // Detect Amazement Expression con hold mínimo anti-falsos-positivos
                     const isAmazed = expressionDetector.detectAmazement(blendshapes, frameCountRef.current)
+
+                    // Update expression label (guarded — only on transition)
+                    const exprLabel = isAmazed ? 'asombro' : 'neutral'
+                    if (prevExpressionRef.current !== exprLabel) {
+                      prevExpressionRef.current = exprLabel
+                      setCurrentExpressionLabel(exprLabel)
+                    }
+
                     if (isAmazed) {
                       if (expressionHoldStartRef.current === null) {
                         expressionHoldStartRef.current = performance.now()
                       } else if (performance.now() - expressionHoldStartRef.current >= SPIDER_SENSE_HOLD_MS) {
                         setSpiderSenseActive(true)
+                        if (!spiderSenseHistoryFiredRef.current) {
+                          spiderSenseHistoryFiredRef.current = true
+                          addHistoryEvent({ label: 'Spider Sense activado', icon: '⚡' })
+                        }
                       }
                     } else {
                       expressionHoldStartRef.current = null
+                      spiderSenseHistoryFiredRef.current = false
                       setSpiderSenseActive(false)
                     }
                   }
@@ -86,6 +102,10 @@ export function useFaceTracking(video, shouldInitialize) {
                   faceLandmarksRef.current = null
                   faceBlendshapesRef.current = null
                   setSpiderSenseActive(false)
+                  if (prevExpressionRef.current !== 'neutral') {
+                    prevExpressionRef.current = 'neutral'
+                    setCurrentExpressionLabel('neutral')
+                  }
                 }
               } catch (err) {
                 console.error('FaceLandmarker error:', err)
@@ -115,5 +135,6 @@ export function useFaceTracking(video, shouldInitialize) {
       }
       isInitializingRef.current = false
     }
-  }, [video, shouldInitialize, faceLandmarksRef, faceBlendshapesRef, setSpiderSenseActive])
+  }, [video, shouldInitialize, faceLandmarksRef, faceBlendshapesRef, setSpiderSenseActive,
+      setCurrentExpressionLabel, addHistoryEvent])
 }

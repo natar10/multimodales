@@ -1,0 +1,69 @@
+/* === MoveStream — Dr. Strange Theme === */
+:root {
+  /* Palette */
+  --color-bg:           #040d13;
+  --color-panel:        #150a22;
+  --color-panel-alt:    #0e0618;
+  --color-crimson:      #d6222b;
+  --color-crimson-lit:  #ff3b47;
+  --color-gold:         #eea944;
+  --color-gold-dim:     #9a6b2a;
+  --color-teal:         #1782a4;
+
+  --color-text-primary:   #f0e6c8;
+  --color-text-secondary: #c4a05a;
+  --color-text-muted:     #6a5535;
+
+  /* Glows */
+  --glow-gold:    0 0 8px #eea94488, 0 0 20px #eea94444;
+  --glow-crimson: 0 0 8px #d6222b88, 0 0 20px #d6222b44;
+  --glow-active:  0 0 12px #eea944aa, 0 0 30px #d6222b66;
+
+  /* Borders */
+  --border-arcane:        1px solid #eea94444;
+  --border-arcane-bright: 1px solid #eea944aa;
+
+  /* Spacing */
+  --panel-padding: 18px;
+  --card-radius:   8px;
+  --gap-sm:  8px;
+  --gap-md:  14px;
+  --gap-lg:  20px;
+
+  /* Canvas — must match .env */
+  --canvas-width:  854px;
+  --canvas-height: 480px;
+  --panel-right-width: 340px;
+
+  /* Typography */
+  --font-arcane: 'Cinzel Decorative', serif;
+  --font-body:   'Cinzel', serif;
+  --font-mono:   'Courier New', monospace;
+}
+
+/* === Keyframes === */
+
+@keyframes pulse-gold {
+  0%, 100% { box-shadow: var(--glow-gold); }
+  50%       { box-shadow: 0 0 18px #C9A84Ccc, 0 0 40px #C9A84C66; }
+}
+
+@keyframes pulse-crimson {
+  0%, 100% { box-shadow: var(--glow-crimson); }
+  50%       { box-shadow: 0 0 18px #c0392bcc, 0 0 40px #c0392b66; }
+}
+
+@keyframes mic-pulse {
+  0%, 100% { opacity: 1;   transform: scale(1); }
+  50%       { opacity: 0.6; transform: scale(1.2); }
+}
+
+@keyframes history-entry-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes arcane-glow {
+  0%, 100% { text-shadow: 0 0 8px #C9A84C88; }
+  50%       { text-shadow: 0 0 16px #C9A84Ccc, 0 0 30px #C9A84C66; }
+}
