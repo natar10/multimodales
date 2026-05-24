@@ -18,9 +18,7 @@ class LGestureDetector {
     // --- Log all detected hands ---
     if (shouldLog && handedness && handedness.length > 0) {
       const handsInfo = handedness.map((h, i) => `[${i}]=${h?.[0]?.categoryName}(${(h?.[0]?.score * 100).toFixed(0)}%)`).join(' ')
-      console.log(`[LGesture] Manos detectadas: ${handsInfo}`)
     } else if (shouldLog) {
-      console.log('[LGesture] Sin manos detectadas')
     }
 
     // Try both Left and Right to see which one is the correct hand
@@ -31,27 +29,11 @@ class LGestureDetector {
     if (shouldLog) {
       if (leftIdx !== -1 && landmarks[leftIdx]) {
         const lm = landmarks[leftIdx]
-        console.log(
-          `[LGesture] LEFT hand landmarks → ` +
-          `idx8.y=${lm[8].y.toFixed(3)} idx5.y=${lm[5].y.toFixed(3)} ` +
-          `(diff=${(lm[5].y - lm[8].y).toFixed(3)}) | ` +
-          `mid12.y=${lm[12].y.toFixed(3)} mid9.y=${lm[9].y.toFixed(3)} | ` +
-          `thumb4.y=${lm[4].y.toFixed(3)} wrist0.y=${lm[0].y.toFixed(3)}`
-        )
         const c = this._checkConditions(lm)
-        console.log(`[LGesture] LEFT  → indexUp=${c.indexExtended} midCurl=${c.middleCurled} ringCurl=${c.ringCurled} pinkyCurl=${c.pinkyCurled} → VALID=${c.valid}`)
       }
       if (rightIdx !== -1 && landmarks[rightIdx]) {
         const lm = landmarks[rightIdx]
-        console.log(
-          `[LGesture] RIGHT hand landmarks → ` +
-          `idx8.y=${lm[8].y.toFixed(3)} idx5.y=${lm[5].y.toFixed(3)} ` +
-          `(diff=${(lm[5].y - lm[8].y).toFixed(3)}) | ` +
-          `mid12.y=${lm[12].y.toFixed(3)} mid9.y=${lm[9].y.toFixed(3)} | ` +
-          `thumb4.y=${lm[4].y.toFixed(3)} wrist0.y=${lm[0].y.toFixed(3)}`
-        )
         const c = this._checkConditions(lm)
-        console.log(`[LGesture] RIGHT → indexUp=${c.indexExtended} midCurl=${c.middleCurled} ringCurl=${c.ringCurled} pinkyCurl=${c.pinkyCurled} → VALID=${c.valid}`)
       }
       this._lastLogTime = now
     }

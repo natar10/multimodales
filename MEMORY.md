@@ -8,7 +8,7 @@ Complejidad: Media | Tiempo: ~2-3 horas
 Detección: Proximidad entre índice y pulgar (solo 2 landmarks)
 Efectos: Esfera con material emisor + mesh 3D de ojo, animación de escala
 Complejidad: Baja | Tiempo: ~1-2 horas
-3. Voz "Chisme Potente" → cambiar el fondo + audio TODO
+3. Voz "Chisme Potente" → cambiar el fondo + audio LISTO
 Detección: Web Speech API nativa en navegador
 Efecto: Shader de fracturas/distorsión o duplicación de pantalla, audio clip tipo cornerta
 Complejidad: Baja | Tiempo: ~1-2 horas
