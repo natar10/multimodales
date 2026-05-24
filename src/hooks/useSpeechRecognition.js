@@ -34,7 +34,8 @@ export function useSpeechRecognition({ isListening, onPhrase }) {
             .replace(/[̀-ͯ]/g, '')
           console.log('🗣️ Heard:', raw)
           if (text.includes('chisme potente')) {
-            console.log('💥 ¡Chisme potente detectado!')
+            window.__chismeT0 = performance.now()
+            console.log(`[CHISME] T0 speech detected — "${raw}"`)
             onPhraseRef.current?.()
           }
         }

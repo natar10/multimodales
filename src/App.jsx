@@ -9,7 +9,7 @@ import { useSpeechRecognition } from './hooks/useSpeechRecognition.js'
 function AppContent() {
   const canvasRef = useRef(null)
   const videoRef = useRef(null)
-  const { snapActive, clapActive, chismeListening, setChismeActive } = React.useContext(AppContext)
+  const { snapActive, clapActive, chismeListening } = React.useContext(AppContext)
   const [videoReady, setVideoReady] = useState(false)
 
   // Initialize video stream
@@ -61,7 +61,7 @@ function AppContent() {
   }, [])
 
   // Only initialize Three.js AFTER video is ready
-  useThreeScene(canvasRef, videoReady ? videoRef.current : null)
+  const sceneManagerRef = useThreeScene(canvasRef, videoReady ? videoRef.current : null)
 
   // Only initialize hand tracking AFTER video is ready
   useHandTracking(videoReady ? videoRef.current : null)
@@ -69,7 +69,12 @@ function AppContent() {
   // Initialize face tracking (always active for expression detection, but runs at 30fps)
   useFaceTracking(videoReady ? videoRef.current : null, true)
 
-  const onChismePhrase = useCallback(() => setChismeActive(true), [setChismeActive])
+  // Call SceneManager directly — skip React state to avoid ~37ms batching delay
+  const onChismePhrase = useCallback(() => {
+    const t0 = window.__chismeT0 ?? 0
+    console.log(`[CHISME] T1 callback → sceneManager directo  +${(performance.now() - t0).toFixed(1)}ms desde T0`)
+    sceneManagerRef.current?.setChismeActive(true)
+  }, [sceneManagerRef])
   useSpeechRecognition({ isListening: chismeListening, onPhrase: onChismePhrase })
 
   return (

@@ -44,7 +44,7 @@ class TriangleDetector {
 
   _isTriangle(allLandmarks) {
     if (!allLandmarks || allLandmarks.length < 2) {
-      console.log('[Triangle] ❌ Manos detectadas:', allLandmarks?.length ?? 0, '(necesita 2)')
+      //console.log('[Triangle] ❌ Manos detectadas:', allLandmarks?.length ?? 0, '(necesita 2)')
       return false
     }
 

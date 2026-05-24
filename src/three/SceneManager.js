@@ -122,6 +122,7 @@ export class SceneManager {
   }
 
   setChismeActive(active) {
+    console.log(`[CHISME] T3 SceneManager.setChismeActive(${active})  +${(performance.now() - (window.__chismeT0 ?? 0)).toFixed(1)}ms desde T0`)
     const effect = this.effects['chismePotente']
     if (effect) effect.setActive(active)
   }
