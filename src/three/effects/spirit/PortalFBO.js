@@ -206,9 +206,9 @@ export class PortalFBO {
       side: THREE.DoubleSide
     });
     this.discMesh = new THREE.Mesh(geo, this.discMaterial);
-    this.discMesh.renderOrder = -1;
+    this.discMesh.renderOrder = 1;
     this.discMesh.visible = false;
-    this.group.add(this.discMesh);
+    this.scene.add(this.discMesh);
   }
 
   setActive(active) {
@@ -243,10 +243,11 @@ export class PortalFBO {
       this.anchoredPosition = this.mouse3d.clone();
     }
 
-    // Particle Ring always stays flat facing the camera
-    this.group.quaternion.copy(this.camera.quaternion);
     const displayPos = this.anchoredPosition ?? this.mouse3d;
-    this.group.position.copy(displayPos);
+
+    // Disc: positioned at the anchored world position, billboarded to camera
+    this.discMesh.position.copy(displayPos);
+    this.discMesh.quaternion.copy(this.camera.quaternion);
 
     // Handle open/close animation
     if (this.active) {
@@ -321,6 +322,7 @@ export class PortalFBO {
     this.particleMaterial.dispose();
     this.particleMesh.geometry.dispose();
     this.quadMesh.geometry.dispose();
+    this.scene.remove(this.discMesh);
     this.discMaterial.dispose();
     this.discMesh.geometry.dispose();
     this.posterTexture.dispose();

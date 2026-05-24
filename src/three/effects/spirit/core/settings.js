@@ -12,7 +12,7 @@ export const followMouse = true;
 
 export const speed = 0.3;
 export const dieSpeed = 0.015;
-export const radius = 0.04;
+export const radius = 0.14;
 export const curlSize = 0.02;
 export const attraction = 2.0;
 export const particleSize = 10.0;
