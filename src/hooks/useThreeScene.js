@@ -6,7 +6,6 @@ export function useThreeScene(containerRef, video) {
   const sceneManagerRef = useRef(null)
   const {
     snapActive,
-    clapActive,
     mirrorActive,
     spiderSenseActive,
     faceLandmarksRef,
@@ -44,13 +43,6 @@ export function useThreeScene(containerRef, video) {
       manager.setSnapActive(snapActive)
     }
   }, [snapActive])
-
-  useEffect(() => {
-    const manager = sceneManagerRef.current
-    if (manager) {
-      manager.setClapActive(clapActive)
-    }
-  }, [clapActive])
 
   useEffect(() => {
     const manager = sceneManagerRef.current

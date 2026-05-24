@@ -2,12 +2,11 @@ import { useEffect, useRef, useContext } from 'react'
 import { HandLandmarker, FilesetResolver } from '@mediapipe/tasks-vision'
 import { AppContext } from '../context/AppContext.jsx'
 import { triangleDetector } from '../gestures/triangleDetector.js'
-import { clapDetector } from '../gestures/clapDetector.js'
 import { lGestureDetector } from '../gestures/lGestureDetector.js'
 
 export function useHandTracking(video) {
   const handLandmarkerRef = useRef(null)
-  const { handLandmarksRef, snapActive, setSnapActive, clapActive, setClapActive, setChismeListening } = useContext(AppContext)
+  const { handLandmarksRef, setSnapActive, setChismeListening } = useContext(AppContext)
   const isInitializingRef = useRef(false)
   const chismeListeningRef = useRef(false)
 
@@ -54,16 +53,6 @@ export function useHandTracking(video) {
                   })
                 }
 
-                // Clap detection (two hands)
-                const clapDetected = clapDetector.detect(results.landmarks)
-                if (clapDetected) {
-                  setClapActive((prev) => {
-                    const newState = !prev
-                    console.log('👏 CLAP detected! New state:', newState)
-                    return newState
-                  })
-                }
-
                 // L-gesture (right hand) → activates voice listening
                 const { isHeld } = lGestureDetector.detect(results.landmarks, results.handedness)
                 if (isHeld !== chismeListeningRef.current) {
@@ -100,7 +89,7 @@ export function useHandTracking(video) {
       }
       isInitializingRef.current = false  // Reset para permitir reinicialización
     }
-  }, [video, handLandmarksRef, setSnapActive, setClapActive, setChismeListening])
+  }, [video, handLandmarksRef, setSnapActive, setChismeListening])
 
   return handLandmarkerRef
 }

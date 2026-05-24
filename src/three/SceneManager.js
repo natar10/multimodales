@@ -4,7 +4,6 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import { VideoPlane } from './VideoPlane.js'
 import { SnapAuraEffect } from './effects/SnapAuraEffect.js'
 import { PortalEffect } from './effects/PortalEffect.js'
-import { BubblesEffect } from './effects/BubblesEffect.js'
 import { MirrorEffect } from './effects/MirrorEffect.js'
 import { SpiderSenseEffect } from './effects/SpiderSenseEffect.js'
 import { ParallaxEffect } from './effects/ParallaxEffect.js'
@@ -79,7 +78,6 @@ export class SceneManager {
     // Initialize effects
     this.registerEffect('snap', new SnapAuraEffect())
     // this.registerEffect('portal', new PortalEffect())
-    // this.registerEffect('clap', new BubblesEffect())
     // this.registerEffect('mirror', new MirrorEffect())
     this.registerEffect('spiderSense', new SpiderSenseEffect())
     this.registerEffect('parallax', new ParallaxEffect())
@@ -104,11 +102,6 @@ export class SceneManager {
     const parallax = this.effects['parallax']
     const faceLandmarks = this.faceDetectionsRef?.current ?? null
     if (parallax) parallax.setActive(active, faceLandmarks)
-  }
-
-  setClapActive(active) {
-    const effect = this.effects['clap']
-    if (effect) effect.setActive(active)
   }
 
   setMirrorActive(active) {

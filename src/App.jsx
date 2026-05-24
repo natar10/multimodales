@@ -9,7 +9,7 @@ import { useSpeechRecognition } from './hooks/useSpeechRecognition.js'
 function AppContent() {
   const canvasRef = useRef(null)
   const videoRef = useRef(null)
-  const { snapActive, clapActive, chismeListening } = React.useContext(AppContext)
+  const { snapActive, chismeListening } = React.useContext(AppContext)
   const [videoReady, setVideoReady] = useState(false)
 
   // Initialize video stream
@@ -107,7 +107,6 @@ function AppContent() {
       >
         <div>Status: {videoReady ? '✅ Ready' : '⏳ Loading'}</div>
         <div>Snap: {snapActive ? '🟢' : '⚪'}</div>
-        <div>Clap: {clapActive ? '🟢' : '⚪'}</div>
       </div>
 
       {/* Mic listening indicator */}
