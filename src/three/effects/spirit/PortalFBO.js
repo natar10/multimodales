@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { positionFrag, quadVert, throughFrag, particlesVert, particlesFrag } from './shaders.js';
+import { positionFrag, quadVert, throughFrag, particlesVert, particlesFrag, portalDiscVert, portalDiscFrag } from './shaders.js';
 import * as settings from './core/settings.js';
 
 export class PortalFBO {
@@ -16,11 +16,13 @@ export class PortalFBO {
     this.initAnimation = 0; // 0 to 1
 
     this.mouse3d = new THREE.Vector3(0, 0, 0);
+    this.anchoredPosition = null;
 
     this.group = new THREE.Group();
 
     this._initFBO();
     this._initParticles();
+    this._initPortalDisc();
   }
 
   _initFBO() {
@@ -184,8 +186,40 @@ export class PortalFBO {
     this.group.add(this.particleMesh);
   }
 
+  _initPortalDisc() {
+    const loader = new THREE.TextureLoader();
+    this.posterTexture = loader.load('/spiderman-poster.jpg');
+    this.posterTexture.wrapS = THREE.ClampToEdgeWrapping;
+    this.posterTexture.wrapT = THREE.ClampToEdgeWrapping;
+
+    const geo = new THREE.CircleGeometry(3, 64);
+    this.discMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        posterTexture: { value: this.posterTexture },
+        time: { value: 0 },
+        initAnimation: { value: 0 }
+      },
+      vertexShader: portalDiscVert,
+      fragmentShader: portalDiscFrag,
+      transparent: true,
+      depthWrite: false,
+      side: THREE.DoubleSide
+    });
+    this.discMesh = new THREE.Mesh(geo, this.discMaterial);
+    this.discMesh.renderOrder = -1;
+    this.discMesh.visible = false;
+    this.group.add(this.discMesh);
+  }
+
   setActive(active) {
+    const wasActive = this.active;
     this.active = active;
+
+    if (active && !wasActive) {
+      this.anchoredPosition = this.mouse3d.clone();
+    } else if (!active) {
+      this.anchoredPosition = null;
+    }
   }
 
   update(dt, x, y) {
@@ -204,9 +238,15 @@ export class PortalFBO {
     // Smoothly track hand (0.3 = snappier tracking)
     this.mouse3d.lerp(targetPos, 0.3);
 
+    // Anchor position at first activation if not yet set
+    if (this.active && !this.anchoredPosition) {
+      this.anchoredPosition = this.mouse3d.clone();
+    }
+
     // Particle Ring always stays flat facing the camera
     this.group.quaternion.copy(this.camera.quaternion);
-    this.group.position.copy(this.mouse3d);
+    const displayPos = this.anchoredPosition ?? this.mouse3d;
+    this.group.position.copy(displayPos);
 
     // Handle open/close animation
     if (this.active) {
@@ -216,6 +256,9 @@ export class PortalFBO {
     }
 
     this.particleMesh.visible = this.initAnimation > 0;
+    this.discMesh.visible = this.initAnimation > 0;
+    this.discMaterial.uniforms.time.value += dt;
+    this.discMaterial.uniforms.initAnimation.value = this.initAnimation;
 
     // ALWAYS update particle material uniforms, even if initAnimation is 0
     this.particleMaterial.uniforms.texturePosition.value = this.rtPosition1.texture;
@@ -249,7 +292,7 @@ export class PortalFBO {
     this.positionShader.uniforms.speed.value = settings.speed * deltaRatio;
     this.positionShader.uniforms.dieSpeed.value = settings.dieSpeed * deltaRatio;
     this.positionShader.uniforms.initAnimation.value = this.initAnimation;
-    this.positionShader.uniforms.mouse3d.value.copy(this.mouse3d);
+    this.positionShader.uniforms.mouse3d.value.copy(displayPos);
     
     // We must disable autoClear otherwise we wipe out scene contents
     const autoClearColor = this.renderer.autoClearColor;
@@ -278,5 +321,8 @@ export class PortalFBO {
     this.particleMaterial.dispose();
     this.particleMesh.geometry.dispose();
     this.quadMesh.geometry.dispose();
+    this.discMaterial.dispose();
+    this.discMesh.geometry.dispose();
+    this.posterTexture.dispose();
   }
 }

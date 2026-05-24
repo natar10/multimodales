@@ -229,3 +229,50 @@ void main() {
 
 }
 `;
+
+export const portalDiscVert = `
+varying vec2 vUv;
+void main() {
+    vUv = uv;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+`;
+
+export const portalDiscFrag = `
+uniform sampler2D posterTexture;
+uniform float time;
+uniform float initAnimation;
+
+varying vec2 vUv;
+
+void main() {
+    vec2 center = vec2(0.5);
+    vec2 uv = vUv - center;
+    float dist = length(uv);
+
+    if (dist > 0.5) discard;
+
+    // Swirl distortion — angle decreases toward edge, animated over time
+    float angle = sin(time * 0.8 + dist * 4.0) * 0.4 * (1.0 - dist * 2.0) * initAnimation;
+    float s = sin(angle);
+    float c = cos(angle);
+    vec2 uvSwirl = vec2(c * uv.x - s * uv.y, s * uv.x + c * uv.y) + center;
+
+    // Chromatic aberration — stronger at center where swirl is strongest
+    float aberration = 0.012 * max(0.0, 1.0 - dist * 2.0) * initAnimation;
+    float r = texture2D(posterTexture, uvSwirl + vec2(aberration, 0.0)).r;
+    float g = texture2D(posterTexture, uvSwirl).g;
+    float b = texture2D(posterTexture, uvSwirl - vec2(aberration, 0.0)).b;
+    vec3 col = vec3(r, g, b);
+
+    // Interdimensional violet tint
+    col = mix(col, vec3(0.2, 0.05, 0.6), 0.18);
+
+    // Edge softness + vignette
+    float edgeAlpha = smoothstep(0.5, 0.42, dist);
+    float vignette = smoothstep(0.5, 0.15, dist);
+    float alpha = edgeAlpha * (0.65 + 0.35 * vignette) * initAnimation;
+
+    gl_FragColor = vec4(col, alpha);
+}
+`;
