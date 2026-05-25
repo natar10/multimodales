@@ -4,6 +4,8 @@ import { AppContext } from '../context/AppContext.jsx'
 import { snapDetector } from '../gestures/snapDetector.js'
 import { clapDetector } from '../gestures/clapDetector.js'
 import { verticalHandDetector } from '../gestures/verticalHandDetector.js'
+import { triangleDetector } from '../gestures/triangleDetector.js'
+import { lGestureDetector } from '../gestures/lGestureDetector.js'
 
 export function useHandTracking(video) {
   const handLandmarkerRef = useRef(null)
@@ -43,6 +45,10 @@ export function useHandTracking(video) {
               const results = handLandmarkerRef.current.detectForVideo(video, Date.now())
               handLandmarksRef.current = results.landmarks
 
+              // Vertical hand detection (always, regardless of hand count)
+              const verticalDetected = verticalHandDetector.detect(results.landmarks)
+              setVerticalHandActive(verticalDetected)
+
               // Detect gestures
               if (results.landmarks && results.landmarks.length > 0) {
 
@@ -77,10 +83,6 @@ export function useHandTracking(video) {
                   setChismeListening(false)
                   setCurrentGestureLabel(null)
                 }
-
-                // Vertical Hand detection
-                const verticalDetected = verticalHandDetector.detect(results.landmarks)
-                setVerticalHandActive(verticalDetected)
               }
             } catch (error) {
               console.error('Hand detection error:', error)

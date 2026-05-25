@@ -36,11 +36,14 @@ export function ModalitiesPanel() {
     currentGestureLabel,
     currentExpressionLabel,
     eventHistory,
+    verticalHandActive,
   } = useContext(AppContext)
 
-  const gestureActive = !!currentGestureLabel || snapActive
+  const gestureActive = !!currentGestureLabel || snapActive || verticalHandActive
   const gestureValue = currentGestureLabel
     ? currentGestureLabel
+    : verticalHandActive
+    ? 'portal (activo)'
     : snapActive
     ? 'triángulo (activo)'
     : 'sin gesto'
