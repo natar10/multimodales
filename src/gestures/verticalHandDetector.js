@@ -1,13 +1,18 @@
 class VerticalHandDetector {
   constructor() {
-    this.cooldownMs = 200; // Small debounce to avoid flickering
+    this.debounceMs = parseInt(import.meta.env.VITE_PORTAL_DEBOUNCE_MS) || 500;
+    this.cooldownMs = 200;
+    this.gestureFirstSeenTime = null;
     this.lastDetectionTime = 0;
     this.wasActive = false;
   }
 
   detect(landmarks) {
     const now = Date.now();
-    if (!landmarks || landmarks.length === 0) {
+
+    // Require exactly 1 hand — prevents false positives from two-hand gestures
+    if (!landmarks || landmarks.length !== 1) {
+      this.gestureFirstSeenTime = null;
       if (now - this.lastDetectionTime > this.cooldownMs) {
         this.wasActive = false;
       }
@@ -24,24 +29,31 @@ class VerticalHandDetector {
 
     // Check if middle finger is pointing up (y is inverted, so smaller y is higher)
     const isUpright = middleTip.y < wrist.y;
-    
-    // Extension check: Distance in Y should be somewhat significant (at least 8% of screen height)
-    // This allows it to work even if the hand is a bit further away or sideways.
+
+    // Extension check: distance in Y should be at least 8% of screen height
     const extensionY = wrist.y - middleTip.y;
     const isExtended = extensionY > 0.08;
 
-    // Check if fingers are generally open (distance from wrist to tip is greater than wrist to knuckles)
-    // Knuckles are typically at index 9 for middle finger
+    // Check fingers are open (tip further from wrist than knuckle)
     const middleMCP = hand[9];
     const isOpen = middleMCP ? (wrist.y - middleTip.y > wrist.y - middleMCP.y) : true;
 
-    const isActive = isUpright && isExtended && isOpen;
+    const isGestureNow = isUpright && isExtended && isOpen;
 
-    if (isActive) {
-      this.lastDetectionTime = now;
-      this.wasActive = true;
-    } else if (now - this.lastDetectionTime > this.cooldownMs) {
-      this.wasActive = false;
+    if (isGestureNow) {
+      if (this.gestureFirstSeenTime === null) {
+        this.gestureFirstSeenTime = now;
+      }
+      // Only activate after gesture has been held continuously for debounceMs
+      if (now - this.gestureFirstSeenTime >= this.debounceMs) {
+        this.lastDetectionTime = now;
+        this.wasActive = true;
+      }
+    } else {
+      this.gestureFirstSeenTime = null;
+      if (now - this.lastDetectionTime > this.cooldownMs) {
+        this.wasActive = false;
+      }
     }
 
     return this.wasActive;
