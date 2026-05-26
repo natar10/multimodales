@@ -12,6 +12,9 @@ export function AppProvider({ children }) {
   const [chismeActive, setChismeActive] = useState(false)
   const [verticalHandActive, setVerticalHandActive] = useState(false)
 
+  // Meme overlay
+  const [activeMeme, setActiveMeme] = useState(null)
+
   // UI feedback state
   const [currentGestureLabel, setCurrentGestureLabel] = useState(null)
   const [currentExpressionLabel, setCurrentExpressionLabel] = useState('neutral')
@@ -46,6 +49,8 @@ export function AppProvider({ children }) {
     setChismeListening,
     chismeActive,
     setChismeActive,
+    activeMeme,
+    setActiveMeme,
     currentGestureLabel,
     setCurrentGestureLabel,
     currentExpressionLabel,

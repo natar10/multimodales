@@ -2,37 +2,59 @@
  * Detecta expresiones faciales basadas en blendshapes de MediaPipe
  */
 export const expressionDetector = {
-  /**
-   * Detecta expresión de asombro (ojos muy abiertos + boca abierta)
-   * @param {Array} blendshapes - Lista de objetos {categoryName, score}
-   * @param {number} frameCount - Para logs ocasionales
-   * @returns {boolean}
-   */
+  _toMap(blendshapes) {
+    const shapes = {}
+    blendshapes.forEach(s => { shapes[s.categoryName] = s.score })
+    return shapes
+  },
+
+  // Spider Sense: cara de dudoso/esceptico
   detectAmazement(blendshapes, frameCount = 0) {
     if (!blendshapes || blendshapes.length === 0) return false
-
-    // Mapear blendshapes para acceso fácil
-    const shapes = {}
-    blendshapes.forEach(s => {
-      shapes[s.categoryName] = s.score
-    })
-
-    const eyeSquintL = shapes['eyeSquintLeft'] || 0
-    const eyeSquintR = shapes['eyeSquintRight'] || 0
-    const browDownL = shapes['browDownLeft'] || 0
-    const browDownR = shapes['browDownRight'] || 0
-    const jawOpen = shapes['jawOpen'] || 0
-
-    // Log para debuguear la nueva cara
-    if (frameCount % 30 === 0) {
-        // console.log(`Skeptic Scores - Squint: ${Math.max(eyeSquintL, eyeSquintR).toFixed(2)}, Brows: ${Math.max(browDownL, browDownR).toFixed(2)}, Mouth: ${jawOpen.toFixed(2)}`)
-    }
-
-    // Para la expresión de la imagen: Ojos achinados + cejas fruncidas + boca cerrada
-    const eyesSquinted = (eyeSquintL > 0.4) || (eyeSquintR > 0.4)
-    const browsDown = (browDownL > 0.3) || (browDownR > 0.3)
-    const mouthClosed = jawOpen < 0.1
-
+    const s = this._toMap(blendshapes)
+    const eyesSquinted = (s['eyeSquintLeft'] || 0) > 0.4 || (s['eyeSquintRight'] || 0) > 0.4
+    const browsDown    = (s['browDownLeft']  || 0) > 0.3 || (s['browDownRight']  || 0) > 0.3
+    const mouthClosed  = (s['jawOpen'] || 0) < 0.1
     return eyesSquinted && browsDown && mouthClosed
-  }
+  },
+
+  // Meme: boca muy abierta + sonrisa amplia (risa malévola)
+  detectRisaMalevola(blendshapes) {
+    if (!blendshapes || blendshapes.length === 0) return false
+    const s = this._toMap(blendshapes)
+    const bigMouth   = (s['jawOpen'] || 0) > 0.5
+    const wideSmileL = (s['mouthSmileLeft']  || 0) > 0.35
+    const wideSmileR = (s['mouthSmileRight'] || 0) > 0.35
+    return bigMouth && wideSmileL && wideSmileR
+  },
+
+  // Meme: ambos ojos abiertos por encima de threshold (equivalente a cat_shock)
+  detectSorprendido(blendshapes) {
+    if (!blendshapes || blendshapes.length === 0) return false
+    const s = this._toMap(blendshapes)
+    const bothEyesWide = (s['eyeWideLeft'] || 0) > 0.25 && (s['eyeWideRight'] || 0) > 0.25
+    const notSquinting = (s['eyeSquintLeft'] || 0) < 0.3 && (s['eyeSquintRight'] || 0) < 0.3
+    return bothEyesWide && notSquinting
+  },
+
+  // Meme: cejas internas arriba + boca cerrada + sin fruncir (cara preocupada)
+  detectPreocupado(blendshapes) {
+    if (!blendshapes || blendshapes.length === 0) return false
+    const s = this._toMap(blendshapes)
+    const innerBrowUp  = (s['browInnerUp']  || 0) > 0.4
+    const mouthClosed  = (s['jawOpen'] || 0) < 0.25
+    const notFurrowed  = (s['browDownLeft'] || 0) < 0.3 && (s['browDownRight'] || 0) < 0.3
+    return innerBrowUp && mouthClosed && notFurrowed
+  },
+
+  // Meme: comisuras hacia abajo + boca cerrada + cejas neutras (cara de "meh / unimpressed")
+  detectSmug(blendshapes) {
+    if (!blendshapes || blendshapes.length === 0) return false
+    const s = this._toMap(blendshapes)
+    const frownCorners = (s['mouthFrownLeft'] || 0) > 0.2 || (s['mouthFrownRight'] || 0) > 0.2
+    const mouthClosed  = (s['jawOpen'] || 0) < 0.12
+    const notSmiling   = (s['mouthSmileLeft'] || 0) < 0.2 && (s['mouthSmileRight'] || 0) < 0.2
+    const browsNeutral = (s['browDownLeft'] || 0) < 0.3 && (s['browDownRight'] || 0) < 0.3
+    return frownCorners && mouthClosed && notSmiling && browsNeutral
+  },
 }

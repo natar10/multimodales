@@ -1,6 +1,7 @@
 import React from 'react'
 import { CanvasOverlay } from './CanvasOverlay.jsx'
 import { HUDOverlay } from './HUDOverlay.jsx'
+import { MemeOverlay } from './MemeOverlay.jsx'
 import { ModalitiesPanel } from './ModalitiesPanel.jsx'
 import '../styles/panel.css'
 
@@ -10,6 +11,7 @@ export function StreamLayout({ canvasRef }) {
       <div className="canvas-panel">
         <CanvasOverlay ref={canvasRef} />
         <HUDOverlay />
+        <MemeOverlay />
       </div>
       <ModalitiesPanel />
     </div>
