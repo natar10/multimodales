@@ -1,15 +1,17 @@
 import { useEffect, useRef } from 'react'
 
-export function useSpeechRecognition({ isListening, onPhrase, onCaliente }) {
+export function useSpeechRecognition({ isListening, onPhrase, onCaliente, onSuperElegante }) {
   const recognitionRef = useRef(null)
   const isListeningRef = useRef(false)
   const onPhraseRef = useRef(onPhrase)
   const onCalienteRef = useRef(onCaliente)
+  const onSuperEleganteRef = useRef(onSuperElegante)
 
   // Keep callback refs current without re-running effects
   useEffect(() => {
     onPhraseRef.current = onPhrase
     onCalienteRef.current = onCaliente
+    onSuperEleganteRef.current = onSuperElegante
   })
 
   // Create recognition instance once
@@ -43,6 +45,10 @@ export function useSpeechRecognition({ isListening, onPhrase, onCaliente }) {
           if (text.includes('caliente')) {
             console.log(`[CALIENTE] Detected — "${raw}"`)
             onCalienteRef.current?.()
+          }
+          if (text.includes('super elegante')) {
+            console.log(`[SUPER ELEGANTE] Detected — "${raw}"`)
+            onSuperEleganteRef.current?.()
           }
         }
       }

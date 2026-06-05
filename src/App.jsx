@@ -9,8 +9,9 @@ import { useSpeechRecognition } from './hooks/useSpeechRecognition.js'
 function AppContent() {
   const canvasRef = useRef(null)
   const videoRef = useRef(null)
-  const { chismeListening, setChismeActive, setCalienteActive, addHistoryEvent } = React.useContext(AppContext)
+  const { chismeListening, setChismeActive, setCalienteActive, setActiveMeme, addHistoryEvent } = React.useContext(AppContext)
   const CALIENTE_DISPLAY_MS = parseInt(import.meta.env.VITE_CALIENTE_DISPLAY_MS) || 4000
+  const MEME_DISPLAY_MS = parseInt(import.meta.env.VITE_MEME_DISPLAY_MS) || 2500
   const [videoReady, setVideoReady] = useState(false)
 
   // Initialize video stream
@@ -86,7 +87,13 @@ function AppContent() {
     setTimeout(() => setCalienteActive(false), CALIENTE_DISPLAY_MS)
   }, [setCalienteActive, addHistoryEvent, CALIENTE_DISPLAY_MS])
 
-  useSpeechRecognition({ isListening: chismeListening, onPhrase: onChismePhrase, onCaliente: onCalientePhrase })
+  const onSuperElegantePhrase = useCallback(() => {
+    setActiveMeme('ariel')
+    addHistoryEvent({ label: '¡Super Elegante!', icon: '🎩' })
+    setTimeout(() => setActiveMeme(null), MEME_DISPLAY_MS)
+  }, [setActiveMeme, addHistoryEvent, MEME_DISPLAY_MS])
+
+  useSpeechRecognition({ isListening: chismeListening, onPhrase: onChismePhrase, onCaliente: onCalientePhrase, onSuperElegante: onSuperElegantePhrase })
 
   return (
     <>

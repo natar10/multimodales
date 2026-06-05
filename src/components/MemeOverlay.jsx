@@ -7,6 +7,7 @@ const MEME_IMAGES = {
   risaMalevola: '/memes/risaMalevola.png',
   preocupado:   '/memes/preocupado.png',
   smug:         '/memes/smug.png',
+  ariel:        '/ariel.png',
 }
 
 export function MemeOverlay() {
