@@ -45,8 +45,8 @@ export function useHandTracking(video) {
               const results = handLandmarkerRef.current.detectForVideo(video, Date.now())
               handLandmarksRef.current = results.landmarks
 
-              // Vertical hand detection (always, regardless of hand count)
-              const verticalDetected = verticalHandDetector.detect(results.landmarks)
+              // Portal trigger: left fist + right hand all fingers up
+              const verticalDetected = verticalHandDetector.detect(results.landmarks, results.handedness)
               setVerticalHandActive(verticalDetected)
 
               // Detect gestures

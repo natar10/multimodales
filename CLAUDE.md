@@ -1,25 +1,30 @@
 Eres experto en HCI multimodal, React, three js, rapier, otras tecnologias que permiten interactuar humano con computadora.
-
+tengo que realizar el siguiente proyecto
+OBJETIVO
+• Desarrollar prototipo aplicación multimodal
+• Visualizaciones 2D 3D combinadas con entrada/salida
+multimodal
+• Relacionarlo con conceptos estudiados en asignatura
+• Describir solución desarrollada mediante informe
+TECNOLOGÍAS A UTILIZAR
+• Three.js para desarrollo
+• Google MediaPipe para tracking manos, cara cuerpo
+• Web Speech API para reconocimiento voz
+• Aplicación ejecutada en navegador web
 
 mi proyecto propuesto:
 
 MOVE STREAM
-TÉCNICASAVANZADASDEINTERACCIÓNMULTIMODAL
-
 MOTIVACIÓN PROYECTO
 streamers actuales controlan sus efectos visuales usando teclado, StreamDeck botones físicos. Esto implica:
 
 Apartar vista cámara en momentos clave
-
 Romper contacto visual con audiencia
-
 Perder reacción genuina por buscar botón correcto
-
 Necesitar técnico adicional para producciones más elaboradas
 
 Esto implica:
 OBJETIVO
-
 Desarrollar prototipo asistente efectos para
 streaming que permita activar overlays efectos visuales
 en tiempo real mediante gestos, voz expresiones
@@ -29,45 +34,6 @@ Navegador web
 Se integra con OBS
  streamer usa su comportamiento natural
 ENTRADAS
-
-¿CÓMO INTERACTÚA USUARIO?
-GESTOS VOZ
-EXPRESIONES
-Pulgar arriba → lluvia likes
-Mano abierta → confeti
-Puño cerrado → efecto impacto
-Señalar → spotlight
-Palabras clave
-configurables
-Detección de boca abierta → reacción sorpresa
-MediaPipe Hands Web Speech API
-MediaPipe Face
-SALIDAS
-
-¿CÓMO SE VE RESULTADO?
-Efectos de partículas overlays animados
-renderizados con Three.js (video)
-Efectos sonido (audio)
-Superpuestos sobre vídeo streamer en tiempo
-real via canvas HTML
-OBS captura ventana como Virtual Camera
-manteniendo flujo que ya usan streamers
-BOCETO
- streamer asigna qué
-efecto corresponde a cada
-gesto
-Qué palabras clave activan
-qué cambios.
-Interfaz simple, no técnica.
-VISTA DE CONFIGURACIÓN
-BOCETO
-Vídeo streamer con efectos
-superpuestos en tiempo real.
-Indicador discreto en esquina
-que muestra qué modalidades
- activas.
-VISTA STREAM
-ALCANCE
 
 IDEAL
 4 gestos manos
@@ -81,21 +47,18 @@ Escenarios 3D complejos
 Avatares animados
 Grabación vídeo interna
 
-Tengo que realizar siguiente proyecto:
+Estado actual:
+Listado de efectos para streamer con tematica dr strange y comics.
 
-Presentación 
-proyecto
-INTRODUCCIÓN ¿En qué
-consiste 
-proyecto?
-OBJETIVO
-• Desarrollar prototipo aplicación multimodal
-• Visualizaciones 2D 3D combinadas con entrada/salida
-multimodal
-• Relacionarlo con conceptos estudiados en asignatura
-• Describir solución desarrollada mediante informe
-TECNOLOGÍAS A UTILIZAR
-• Three.js para desarrollo
-• Google MediaPipe para tracking manos, cara cuerpo
-• Web Speech API para reconocimiento voz
-• Aplicación ejecutada en navegador web
+1. Portal circular + poster de película - LISTO
+Detección: Historial de posiciones de mano → patrón circular (puedo rastrear últimos ~30 frames)
+Efecto: Three.js swirl shader + plane con textura de poster
+2. Mano en forma de triangulo →  + tercer ojo ✅ LISTO
+Detección: Proximidad entre índice y pulgar (solo 2 landmarks)
+Efectos: Esfera con material emisor + mesh 3D de ojo, animación de escala
+3. Voz "Chisme Potente" → cambiar el fondo + audio LISTO
+Detección: Web Speech API nativa en navegador
+Efecto: Shader de fracturas/distorsión o duplicación de pantalla, audio clip tipo cornerta
+4. Expresión de asombro → spider sense (aristas vibrantes) ✅ LISTO
+Detección: Face landmarks → ojos bien abiertos + boca abierta
+Efecto: Lines/wireframe 3D alrededor del rostro, animación de vibración
