@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react'
 import { AppProvider, AppContext } from './context/AppContext.jsx'
+import { LandingPage } from './components/LandingPage.jsx'
 import { StreamLayout } from './components/StreamLayout.jsx'
 import { useThreeScene } from './hooks/useThreeScene.js'
 import { useHandTracking } from './hooks/useHandTracking.js'
@@ -110,6 +111,10 @@ function AppContent() {
 }
 
 export default function App() {
+  const [started, setStarted] = useState(false)
+
+  if (!started) return <LandingPage onStart={() => setStarted(true)} />
+
   return (
     <AppProvider>
       <AppContent />

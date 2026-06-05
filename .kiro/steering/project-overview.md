@@ -1,4 +1,4 @@
-# MoveStream — Dr. Strange Edition
+# MoveStream
 
 ## Qué es este proyecto
 
