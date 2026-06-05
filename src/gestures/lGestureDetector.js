@@ -69,12 +69,12 @@ class LGestureDetector {
   }
 
   _checkConditions(lm) {
-    const indexExtended = lm[8].y < lm[5].y - 0.05
-    const middleCurled  = lm[12].y > lm[9].y
-    const ringCurled    = lm[16].y > lm[13].y
-    const pinkyCurled   = lm[20].y > lm[17].y
-    const valid = indexExtended && middleCurled && ringCurled && pinkyCurled
-    return { indexExtended, middleCurled, ringCurled, pinkyCurled, valid }
+    const indexExtended  = lm[8].y  < lm[5].y  - 0.05
+    const middleExtended = lm[12].y < lm[9].y  - 0.05
+    const ringCurled     = lm[16].y > lm[13].y
+    const pinkyCurled    = lm[20].y > lm[17].y
+    const valid = indexExtended && middleExtended && ringCurled && pinkyCurled
+    return { indexExtended, middleExtended, ringCurled, pinkyCurled, valid }
   }
 }
 
