@@ -6,68 +6,40 @@ export function useThreeScene(containerRef, video) {
   const sceneManagerRef = useRef(null)
   const {
     snapActive,
-    mirrorActive,
     spiderSenseActive,
     verticalHandActive,
     handLandmarksRef,
     faceLandmarksRef,
   } = useContext(AppContext)
 
-  // Initialize SceneManager ONLY when video is ready
   useEffect(() => {
-    if (!containerRef.current || !video) {
-      console.log('⏳ Waiting for container and video...')
-      return
-    }
+    if (!containerRef.current || !video) return
 
-    console.log('🏗️ SceneManager creating with video ready...')
     const sceneManager = new SceneManager(containerRef.current, video)
     sceneManager.setFaceDetectionsRef(faceLandmarksRef)
     sceneManager.setHandDetectionsRef(handLandmarksRef)
     sceneManager.init()
-    console.log('▶️ SceneManager init complete, calling start()...')
     sceneManager.start()
     sceneManagerRef.current = sceneManager
-    console.log('✅ SceneManager ready')
 
     return () => {
-      console.log('🧹 Disposing SceneManager')
       if (sceneManagerRef.current) {
         sceneManagerRef.current.dispose()
         sceneManagerRef.current = null
       }
     }
-  }, [containerRef, video]) // Re-run if video changes
+  }, [containerRef, video])
 
-  // Update effects based on state changes
   useEffect(() => {
-    const manager = sceneManagerRef.current
-    if (manager) {
-      manager.setSnapActive(snapActive)
-    }
+    sceneManagerRef.current?.setSnapActive(snapActive)
   }, [snapActive])
 
   useEffect(() => {
-    const manager = sceneManagerRef.current
-    if (manager) {
-      manager.setMirrorActive(mirrorActive)
-    }
-  }, [mirrorActive])
-
-
-  useEffect(() => {
-    const manager = sceneManagerRef.current
-    if (manager) {
-      manager.setSpiderSenseActive(spiderSenseActive)
-    }
+    sceneManagerRef.current?.setSpiderSenseActive(spiderSenseActive)
   }, [spiderSenseActive])
 
   useEffect(() => {
-    const manager = sceneManagerRef.current
-    if (manager) {
-      console.log('📡 Setting portal active to:', verticalHandActive)
-      manager.setPortalActive(verticalHandActive)
-    }
+    sceneManagerRef.current?.setPortalActive(verticalHandActive)
   }, [verticalHandActive])
 
   return sceneManagerRef

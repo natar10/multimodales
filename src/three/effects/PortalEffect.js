@@ -9,8 +9,6 @@ export class PortalEffect {
   }
 
   init(scene, renderer, camera) {
-    console.log('PortalEffect initialized');
-
     // PortalFBO requires renderer and camera for FBO setup and mapping
     this.portalFBO = new PortalFBO(renderer, scene, camera);
     this.group.add(this.portalFBO.group);

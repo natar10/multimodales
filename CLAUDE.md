@@ -48,17 +48,41 @@ Avatares animados
 Grabación vídeo interna
 
 Estado actual:
-Listado de efectos para streamer con tematica dr strange y comics.
+Temática Dr. Strange / comics. Landing page con nebulosa Three.js → pantalla principal.
 
-1. Portal circular + poster de película - LISTO
-Detección: Historial de posiciones de mano → patrón circular (puedo rastrear últimos ~30 frames)
-Efecto: Three.js swirl shader + plane con textura de poster
-2. Mano en forma de triangulo →  + tercer ojo ✅ LISTO
-Detección: Proximidad entre índice y pulgar (solo 2 landmarks)
-Efectos: Esfera con material emisor + mesh 3D de ojo, animación de escala
-3. Voz "Chisme Potente" → cambiar el fondo + audio LISTO
-Detección: Web Speech API nativa en navegador
-Efecto: Shader de fracturas/distorsión o duplicación de pantalla, audio clip tipo cornerta
-4. Expresión de asombro → spider sense (aristas vibrantes) ✅ LISTO
-Detección: Face landmarks → ojos bien abiertos + boca abierta
-Efecto: Lines/wireframe 3D alrededor del rostro, animación de vibración
+GESTOS DE MANO
+1. Puño izquierda + todos dedos extendidos mano derecha → Portal ✅ LISTO
+   Detección: verticalHandDetector — requiere exactamente 2 manos, handedness MediaPipe
+   Efecto: PortalEffect (swirl shader + poster de película)
+
+2. Triángulo (índice+pulgar proximidad) → Tercer Ojo ✅ LISTO
+   Detección: triangleDetector — proximidad landmarks
+   Efecto: SnapAuraEffect (aura verde + ojo 3D) + ParallaxEffect (ojos flotantes con face tracking)
+
+3. Símbolo de paz (V, índice+medio extendidos) → Activa escucha de voz ✅ LISTO
+   Detección: lGestureDetector — hold 400ms
+   Efecto: Activa Web Speech API
+
+COMANDOS DE VOZ (requieren símbolo de paz activo)
+4. "Chisme Potente" → Glitch + audio corneta ✅ LISTO
+   Efecto: ChismePotente (GlitchPass + Web Audio API pre-decoded)
+
+5. "Caliente" → Overlay dramático hot.png + audio explosión ✅ LISTO
+   Efecto: CalienteOverlay (CSS pulse+glow, explosion.mp3)
+
+6. "Super Elegante" → Meme Ariel en burbuja dorada ✅ LISTO
+   Efecto: MemeOverlay con ariel.png
+
+EXPRESIONES FACIALES
+7. Expresión escéptica (ojos entrecerrados + cejas bajas) → Spider Sense ✅ LISTO
+   Detección: expressionDetector.detectAmazement — face blendshapes
+   Efecto: SpiderSenseEffect (wireframe vibrante alrededor del rostro)
+
+8. Expresiones Homelander → Memes en burbuja dorada ✅ LISTO
+   Detección: expressionDetector (risaMalevola, sorprendido, preocupado, smug)
+   Efecto: MemeOverlay (burbuja circular animada, esquina inferior derecha)
+
+NO ACTIVOS (código presente pero desconectado)
+- clapDetector: importado en useHandTracking, nunca llamado
+- BubblesEffect: stub, no registrado en SceneManager
+- MirrorEffect: registrado pero comentado en SceneManager.init()

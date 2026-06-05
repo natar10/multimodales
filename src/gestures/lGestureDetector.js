@@ -1,53 +1,22 @@
-// Detects pointing gesture on the target hand.
-// Logs detailed diagnostics every 800ms to diagnose hand/gesture issues.
-
 const HOLD_DURATION = 400
-const LOG_INTERVAL = 800  // ms between diagnostic logs
 
 class LGestureDetector {
   constructor() {
     this._holdStart = null
     this._isHeld = false
-    this._lastLogTime = 0
   }
 
   detect(landmarks, handedness) {
     const now = Date.now()
-    const shouldLog = now - this._lastLogTime > LOG_INTERVAL
+    const targetIdx = this._findHand(handedness, 'Left')
 
-    // --- Log all detected hands ---
-    if (shouldLog && handedness && handedness.length > 0) {
-      const handsInfo = handedness.map((h, i) => `[${i}]=${h?.[0]?.categoryName}(${(h?.[0]?.score * 100).toFixed(0)}%)`).join(' ')
-    } else if (shouldLog) {
-    }
-
-    // Try both Left and Right to see which one is the correct hand
-    const leftIdx  = this._findHand(handedness, 'Left')
-    const rightIdx = this._findHand(handedness, 'Right')
-
-    // --- Log landmarks of whichever hands exist ---
-    if (shouldLog) {
-      if (leftIdx !== -1 && landmarks[leftIdx]) {
-        const lm = landmarks[leftIdx]
-        const c = this._checkConditions(lm)
-      }
-      if (rightIdx !== -1 && landmarks[rightIdx]) {
-        const lm = landmarks[rightIdx]
-        const c = this._checkConditions(lm)
-      }
-      this._lastLogTime = now
-    }
-
-    // --- Actual detection (currently using Left) ---
-    const targetIdx = leftIdx
     if (targetIdx === -1 || !landmarks[targetIdx]) {
       this._holdStart = null
       this._isHeld = false
       return { isHeld: false }
     }
 
-    const lm = landmarks[targetIdx]
-    const { valid } = this._checkConditions(lm)
+    const { valid } = this._checkConditions(landmarks[targetIdx])
 
     if (valid) {
       if (this._holdStart === null) this._holdStart = now

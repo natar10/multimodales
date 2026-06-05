@@ -2,7 +2,6 @@ import { useEffect, useRef, useContext } from 'react'
 import { HandLandmarker, FilesetResolver } from '@mediapipe/tasks-vision'
 import { AppContext } from '../context/AppContext.jsx'
 import { snapDetector } from '../gestures/snapDetector.js'
-import { clapDetector } from '../gestures/clapDetector.js'
 import { verticalHandDetector } from '../gestures/verticalHandDetector.js'
 import { triangleDetector } from '../gestures/triangleDetector.js'
 import { lGestureDetector } from '../gestures/lGestureDetector.js'
@@ -10,7 +9,7 @@ import { lGestureDetector } from '../gestures/lGestureDetector.js'
 export function useHandTracking(video) {
   const handLandmarkerRef = useRef(null)
   const { handLandmarksRef, setSnapActive, setChismeListening,
-          setCurrentGestureLabel, addHistoryEvent, 
+          setCurrentGestureLabel, addHistoryEvent,
           setVerticalHandActive } = useContext(AppContext)
   const isInitializingRef = useRef(false)
   const chismeListeningRef = useRef(false)
@@ -36,9 +35,7 @@ export function useHandTracking(video) {
         })
 
         handLandmarkerRef.current = handLandmarker
-        console.log('✅ HandLandmarker initialized')
 
-        // Start detection loop
         const detectionLoop = () => {
           if (handLandmarkerRef.current && video.readyState >= HTMLMediaElement.HAVE_METADATA) {
             try {
@@ -49,35 +46,26 @@ export function useHandTracking(video) {
               const verticalDetected = verticalHandDetector.detect(results.landmarks, results.handedness)
               setVerticalHandActive(verticalDetected)
 
-              // Detect gestures
               if (results.landmarks && results.landmarks.length > 0) {
-
-                // Triangle gesture detection (two hands)
                 const triangleDetected = triangleDetector.detect(results.landmarks)
                 if (triangleDetected) {
-                  setSnapActive((prev) => {
-                    const newState = !prev
-                    console.log('🔺 TRIANGLE detected! New state:', newState)
-                    return newState
-                  })
+                  setSnapActive((prev) => !prev)
                   addHistoryEvent({ label: 'Tercer Ojo activado', icon: '🔺' })
                 }
 
-                // L-gesture (right hand) → activates voice listening
+                // Peace sign → activates voice listening
                 const { isHeld } = lGestureDetector.detect(results.landmarks, results.handedness)
                 if (isHeld !== chismeListeningRef.current) {
                   chismeListeningRef.current = isHeld
                   setChismeListening(isHeld)
                   if (isHeld) {
-                    setCurrentGestureLabel('gesto L')
-                    addHistoryEvent({ label: 'Escucha de voz activada', icon: '🤙' })
+                    setCurrentGestureLabel('símbolo de paz')
+                    addHistoryEvent({ label: 'Escucha de voz activada', icon: '✌️' })
                   } else {
                     setCurrentGestureLabel(null)
                   }
-                  console.log(isHeld ? '🤙 Gesto L — escucha activada' : '🤙 Gesto L soltado')
                 }
               } else {
-                // No hands visible — ensure listening stops
                 if (chismeListeningRef.current) {
                   chismeListeningRef.current = false
                   setChismeListening(false)
@@ -99,12 +87,11 @@ export function useHandTracking(video) {
     initializeHandLandmarker()
 
     return () => {
-      console.log('🧹 Cleaning up HandLandmarker')
       if (handLandmarkerRef.current) {
         handLandmarkerRef.current.close()
         handLandmarkerRef.current = null
       }
-      isInitializingRef.current = false  // Reset para permitir reinicialización
+      isInitializingRef.current = false
     }
   }, [video, handLandmarksRef, setSnapActive, setChismeListening,
       setCurrentGestureLabel, addHistoryEvent])

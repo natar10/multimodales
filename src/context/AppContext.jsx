@@ -5,7 +5,6 @@ export const AppContext = createContext()
 export function AppProvider({ children }) {
   // Efectos activos (booleanos que disparan renders)
   const [snapActive, setSnapActive] = useState(false)
-  const [mirrorActive, setMirrorActive] = useState(false)
   const [spiderSenseActive, setSpiderSenseActive] = useState(false)
   const [portalPosterIndex, setPortalPosterIndex] = useState(0)
   const [chismeListening, setChismeListening] = useState(false)
@@ -35,8 +34,6 @@ export function AppProvider({ children }) {
   const value = {
     snapActive,
     setSnapActive,
-    mirrorActive,
-    setMirrorActive,
     spiderSenseActive,
     setSpiderSenseActive,
     portalPosterIndex,

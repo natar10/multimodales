@@ -114,7 +114,6 @@ export class ParallaxEffect {
         this.group.add(eyeGroup)
       }
 
-      console.log(`✅ ParallaxEffect: ${EYE_COUNT} ojos | escala ${EYE_SCALE_MIN}–${EYE_SCALE_MAX}`)
     }, undefined, (err) => console.error('❌ ParallaxEffect load error:', err))
 
     scene.add(this.group)
@@ -192,7 +191,6 @@ export class ParallaxEffect {
       this.smoothY = 0
       for (const eye of this.eyes) eye.group.visible = false
     }
-    console.log('👁️ ParallaxEffect.setActive():', active)
   }
 
   dispose() {

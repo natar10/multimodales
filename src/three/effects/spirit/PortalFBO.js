@@ -93,35 +93,20 @@ export class PortalFBO {
 
     this.defaultPositionTexture = this._createPositionTexture();
 
-    // Init FBO with default positions
-    console.log('🔧 PortalFBO: Initializing FBO with defaultPositionTexture');
-
     const wasAutoClear = this.renderer.autoClearColor;
     this.renderer.autoClearColor = false;
 
     this.quadMesh.material = this.copyShader;
     this.copyShader.uniforms.texture.value = this.defaultPositionTexture;
 
-    console.log('🔧 PortalFBO: Copying defaultPositionTexture to rtPosition1...');
     this.renderer.setRenderTarget(this.rtPosition1);
     this.renderer.render(this.fboScene, this.fboCamera);
-    console.log('✅ PortalFBO: Rendered to rtPosition1');
 
-    console.log('🔧 PortalFBO: Copying defaultPositionTexture to rtPosition2...');
     this.renderer.setRenderTarget(this.rtPosition2);
     this.renderer.render(this.fboScene, this.fboCamera);
-    console.log('✅ PortalFBO: Rendered to rtPosition2');
 
     this.renderer.setRenderTarget(null);
     this.renderer.autoClearColor = wasAutoClear;
-
-    // Read back pixels to verify the copy worked
-    const readBuffer = new Float32Array(4);
-    this.renderer.readRenderTargetPixels(this.rtPosition1, 0, 0, 1, 1, readBuffer);
-    console.log('🔍 rtPosition1 first pixel after copy:', readBuffer);
-    // If all zeros → copy failed. If values like [-26, -24, -33, 0.99] → copy worked.
-
-    console.log('🔧 PortalFBO: FBO initialized, rtPosition1 and rtPosition2 ready');
   }
 
   _createPositionTexture() {
@@ -144,7 +129,6 @@ export class PortalFBO {
     texture.generateMipmaps = false;
     texture.flipY = false;
 
-    console.log('🔧 PortalFBO: Created defaultPositionTexture with', this.amount, 'particles, first value:', positions.slice(0, 4));
 
     return texture;
   }
@@ -269,13 +253,6 @@ export class PortalFBO {
       return;
     }
 
-    // Debug: log animation progress every 0.5 seconds
-    if (Math.floor(this.positionShader.uniforms.time.value * 10) % 5 === 0) {
-      const hasTex = this.particleMaterial.uniforms.texturePosition.value !== null;
-      console.log('✨ PortalFBO - initAnimation:', this.initAnimation.toFixed(2),
-        'active:', this.active, 'hasTexture:', hasTex,
-        'particleCount:', this.amount, 'mouse3d:', this.mouse3d);
-    }
 
     // GPGPU Update Loop
     // Swap RTs

@@ -4,7 +4,6 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import { VideoPlane } from './VideoPlane.js'
 import { SnapAuraEffect } from './effects/SnapAuraEffect.js'
 import { PortalEffect } from './effects/PortalEffect.js'
-import { MirrorEffect } from './effects/MirrorEffect.js'
 import { SpiderSenseEffect } from './effects/SpiderSenseEffect.js'
 import { ParallaxEffect } from './effects/ParallaxEffect.js'
 import { ChismePotente } from './effects/ChismePotente.js'
@@ -12,7 +11,6 @@ import { planeDimensions } from '../utils/coordUtils.js'
 
 export class SceneManager {
   constructor(containerElement, video) {
-    console.log('🏭 SceneManager constructor called')
     this.container = containerElement
     this.video = video
     this.renderer = null
@@ -74,7 +72,6 @@ export class SceneManager {
     this.videoPlane.init(this.scene)
     this.videoPlane.fitToCamera(this.camera)
     this.syncPlaneDimensions()
-    console.log('🎬 VideoPlane initialized, scene children:', this.scene.children.length)
 
     // Lighting
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6)
@@ -83,7 +80,6 @@ export class SceneManager {
     // Initialize effects
     this.registerEffect('snap', new SnapAuraEffect())
     this.registerEffect('portal', new PortalEffect())
-    // this.registerEffect('mirror', new MirrorEffect())
     this.registerEffect('spiderSense', new SpiderSenseEffect())
     this.registerEffect('parallax', new ParallaxEffect())
     this.registerEffect('chismePotente', new ChismePotente())
@@ -121,23 +117,12 @@ export class SceneManager {
     if (effect) effect.setActive(active)
   }
 
-  setClapActive(active) {
-    const effect = this.effects['clap']
-    if (effect) effect.setActive(active)
-  }
-
-  setMirrorActive(active) {
-    const effect = this.effects['mirror']
-    if (effect) effect.setActive(active)
-  }
-
   setSpiderSenseActive(active) {
     const effect = this.effects['spiderSense']
     if (effect) effect.setActive(active)
   }
 
   setChismeActive(active) {
-    console.log(`[CHISME] T3 SceneManager.setChismeActive(${active})  +${(performance.now() - (window.__chismeT0 ?? 0)).toFixed(1)}ms desde T0`)
     const effect = this.effects['chismePotente']
     if (effect) effect.setActive(active)
   }

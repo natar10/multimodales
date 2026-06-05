@@ -34,7 +34,6 @@ export class SnapAuraEffect {
       chakra.scale.setScalar(import.meta.env.VITE_SNAP_CHAKRA_SCALE)
       this.chakraMesh = chakra
       this.chakraGroup.add(chakra)
-      console.log('✅ Chakra GLB loaded')
     }, undefined, (err) => console.error('❌ Chakra load error:', err))
 
     // --- Eye GLB ---
@@ -50,7 +49,6 @@ export class SnapAuraEffect {
       eye.rotation.y = parseFloat(import.meta.env.VITE_SNAP_EYE_ROTATION_Y) || Math.PI
       this.eyeMesh = eye
       this.chakraGroup.add(eye)
-      console.log('✅ Eye GLB loaded')
     }, undefined, (err) => console.error('❌ Eye load error:', err))
 
     // Light for the eye
@@ -60,7 +58,6 @@ export class SnapAuraEffect {
 
     this.chakraGroup.visible = false
     scene.add(this.chakraGroup)
-    console.log('✅ SnapAuraEffect initialized')
   }
 
   update(delta, faceLandmarks) {
@@ -115,7 +112,6 @@ export class SnapAuraEffect {
 
   setActive(active) {
     this.isActive = active
-    console.log('✨ SnapAuraEffect.setActive():', active)
     if (active) {
       this.time = 0
       this.chakraGroup.visible = true

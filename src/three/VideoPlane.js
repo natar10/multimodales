@@ -64,7 +64,6 @@ export class VideoPlane {
     this.mesh.position.z = -10
 
     scene.add(this.mesh)
-    console.log('✅ VideoPlane added to scene')
   }
 
   update() {
