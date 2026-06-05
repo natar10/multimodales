@@ -1,0 +1,124 @@
+%! Author = nata_
+%! Date = 10/23/2025
+
+
+\documentclass[11pt]{article}
+\usepackage[a4paper, margin=1in]{geometry}
+\usepackage{setspace}
+\usepackage{titling}
+\usepackage{graphicx}
+\usepackage{lmodern}
+\usepackage{datetime}
+\usepackage{parskip}
+\usepackage{url}
+\usepackage[colorlinks=true, linkcolor=blue, citecolor=blue, urlcolor=blue]{hyperref}
+\usepackage{titlesec}
+\usepackage{tikz}
+
+\titleformat{\section}{\Large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\large\bfseries}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries}{\thesubsubsection}{1em}{}
+
+\renewcommand{\thesection}{\arabic{section}}
+\renewcommand{\thesubsection}{\thesection.\arabic{subsection}}
+\renewcommand{\thesubsubsection}{\thesubsection.\arabic{subsubsection}}
+
+\usetikzlibrary{shapes.geometric, shapes.misc, arrows.meta, positioning,
+                fit, backgrounds, calc}
+\usepackage{xcolor}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{float}
+
+% ── Paleta ────────────────────────────────────────────────────────────
+\definecolor{clrInput}{HTML}{DBEAFE}
+\definecolor{clrInputBorder}{HTML}{3B82F6}
+\definecolor{clrSubgraph}{HTML}{EFF6FF}
+\definecolor{clrModel}{HTML}{E0E7FF}
+\definecolor{clrModelBorder}{HTML}{6366F1}
+\definecolor{clrCheck}{HTML}{FEF3C7}
+\definecolor{clrCheckBorder}{HTML}{F59E0B}
+\definecolor{clrPred}{HTML}{FCE7F3}
+\definecolor{clrPredBorder}{HTML}{EC4899}
+\definecolor{clrSkip}{HTML}{F1F5F9}
+\definecolor{clrSkipBorder}{HTML}{94A3B8}
+\definecolor{clrGate}{HTML}{FFF7ED}
+\definecolor{clrGateBorder}{HTML}{F97316}
+\definecolor{clrFusion}{HTML}{D1FAE5}
+\definecolor{clrFusionBorder}{HTML}{10B981}
+\definecolor{clrGeo}{HTML}{F3E8FF}
+\definecolor{clrGeoBorder}{HTML}{A855F7}
+\definecolor{clrCand}{HTML}{F3E8FF}
+\definecolor{clrCandBorder}{HTML}{A855F7}
+\definecolor{clrResult}{HTML}{DCFCE7}
+\definecolor{clrResultBorder}{HTML}{22C55E}
+\definecolor{clrErr}{HTML}{FEE2E2}
+\definecolor{clrErrBorder}{HTML}{EF4444}
+\definecolor{clrRetry}{HTML}{FEE2E2}
+\definecolor{clrRetryBorder}{HTML}{EF4444}
+\definecolor{clrDecide}{HTML}{FEF3C7}
+\definecolor{clrDecideBorder}{HTML}{F59E0B}
+
+% ── Estilos ───────────────────────────────────────────────────────────
+\tikzset{
+  base/.style={draw, align=center, font=\footnotesize\sffamily,
+    rounded corners=4pt, line width=0.8pt,
+    minimum width=2.4cm, minimum height=0.9cm},
+  rect/.style    = {base},
+  diam/.style    = {base, shape=diamond, aspect=2.0,
+                    minimum width=2.8cm, minimum height=1.1cm},
+  para/.style    = {base, shape=trapezium,
+                    trapezium left angle=80, trapezium right angle=100,
+                    minimum width=2.6cm},
+  pred/.style    = {base, shape=chamfered rectangle,
+                    chamfered rectangle corners={north east, south east},
+                    minimum width=2.8cm, minimum height=0.9cm},
+  stadium/.style = {base, rounded corners=14pt,
+                    minimum width=5.0cm, minimum height=1.1cm},
+  pill/.style    = {base, rounded corners=14pt,
+                    minimum width=2.6cm, minimum height=0.9cm},
+  arr/.style     = {-{Stealth[length=4.5pt]}, line width=0.8pt, gray!60!black},
+  lbl/.style     = {font=\scriptsize\sffamily, inner sep=1pt},
+}
+
+\begin{document}
+
+% First Page - Centered
+\begin{titlepage}
+    \centering
+    \vspace*{1cm}
+
+    \includegraphics[width=0.3\textwidth]{./assets/uva-logo}\\[2cm]
+
+    {\Huge \textbf{Prototipo de aplicación multimodal}}\\[1.5ex]
+    {\LARGE TÉCNICAS AVANZADAS DE INTERACCIÓN MULTIMODAL}\\[2cm]
+
+
+    {\Large Nataly Rocha}\\[5cm]
+
+\textbf{    {\Large Universidad de Valladolid }\\[0.5cm] }
+\textbf{    {\Large Escuela de Ingeniería Informática}\\[0.5cm]}
+
+\newdate{hoy}{\the\day}{\the\month}{\the\year}
+\newcommand{\nextyear}{\the\numexpr\the\year+1\relax}
+\newcommand{\lastyear}{\the\numexpr\the\year-1\relax}
+\textbf{    {\Large \lastyear\ - \the\year }\\[0.5cm]}
+
+\end{titlepage}
+
+
+
+\newpage
+
+\bibliographystyle{plainurl}
+\bibliography{bibliography}
+
+\newpage
+\appendix
+
+\section{Código fuente del Proyecto}
+\label{subsec:codigoFuente}
+
+
+\end{document}

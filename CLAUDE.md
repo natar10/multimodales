@@ -34,18 +34,19 @@ Navegador web
 Se integra con OBS
  streamer usa su comportamiento natural
 ENTRADAS
+ENTRADAS¿CÓMO INTERACTÚA EL USUARIO?GESTOS MediaPipe por ejemplo HandsPulgar arriba $\rightarrow$ lluvia de likesMano abierta $\rightarrow$ confetiPuño cerrado $\rightarrow$ efecto de impactoSeñalar $\rightarrow$ spotlightVOZ Web Speech APIPalabras clave configurablesEXPRESIONES MediaPipe FaceDetección de boca abierta $\rightarrow$ reacción de sorpresa
 
-IDEAL
-4 gestos manos
-3 palabras clave voz
-1 expresión facial
-Efectos Three.js: partículas, cambios
- color, overlays simples
-Efectos audio pre-existentes
-NICE TO HAVE
-Escenarios 3D complejos
-Avatares animados
-Grabación vídeo interna
+SALIDAS
+¿CÓMO SE VE EL RESULTADO?
+
+Efectos de partículas y overlays animados renderizados con Three.js (video)
+
+Efectos de sonido (audio)
+
+Superpuestos sobre el vídeo del streamer en tiempo real via canvas HTML
+
+
+
 
 Estado actual:
 Temática Dr. Strange / comics. Landing page con nebulosa Three.js → pantalla principal.
