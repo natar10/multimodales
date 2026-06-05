@@ -9,7 +9,8 @@ import { useSpeechRecognition } from './hooks/useSpeechRecognition.js'
 function AppContent() {
   const canvasRef = useRef(null)
   const videoRef = useRef(null)
-  const { chismeListening, setChismeActive, addHistoryEvent } = React.useContext(AppContext)
+  const { chismeListening, setChismeActive, setCalienteActive, addHistoryEvent } = React.useContext(AppContext)
+  const CALIENTE_DISPLAY_MS = parseInt(import.meta.env.VITE_CALIENTE_DISPLAY_MS) || 4000
   const [videoReady, setVideoReady] = useState(false)
 
   // Initialize video stream
@@ -79,7 +80,13 @@ function AppContent() {
     addHistoryEvent({ label: '¡Chisme Potente!', icon: '📯' })
     setTimeout(() => setChismeActive(false), 3500)
   }, [sceneManagerRef, setChismeActive, addHistoryEvent])
-  useSpeechRecognition({ isListening: chismeListening, onPhrase: onChismePhrase })
+  const onCalientePhrase = useCallback(() => {
+    setCalienteActive(true)
+    addHistoryEvent({ label: '¡Caliente!', icon: '🔥' })
+    setTimeout(() => setCalienteActive(false), CALIENTE_DISPLAY_MS)
+  }, [setCalienteActive, addHistoryEvent, CALIENTE_DISPLAY_MS])
+
+  useSpeechRecognition({ isListening: chismeListening, onPhrase: onChismePhrase, onCaliente: onCalientePhrase })
 
   return (
     <>

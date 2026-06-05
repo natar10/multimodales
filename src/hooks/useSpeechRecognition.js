@@ -1,13 +1,15 @@
 import { useEffect, useRef } from 'react'
 
-export function useSpeechRecognition({ isListening, onPhrase }) {
+export function useSpeechRecognition({ isListening, onPhrase, onCaliente }) {
   const recognitionRef = useRef(null)
   const isListeningRef = useRef(false)
   const onPhraseRef = useRef(onPhrase)
+  const onCalienteRef = useRef(onCaliente)
 
-  // Keep callback ref current without re-running effects
+  // Keep callback refs current without re-running effects
   useEffect(() => {
     onPhraseRef.current = onPhrase
+    onCalienteRef.current = onCaliente
   })
 
   // Create recognition instance once
@@ -37,6 +39,10 @@ export function useSpeechRecognition({ isListening, onPhrase }) {
             window.__chismeT0 = performance.now()
             console.log(`[CHISME] T0 speech detected — "${raw}"`)
             onPhraseRef.current?.()
+          }
+          if (text.includes('caliente')) {
+            console.log(`[CALIENTE] Detected — "${raw}"`)
+            onCalienteRef.current?.()
           }
         }
       }

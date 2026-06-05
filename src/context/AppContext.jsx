@@ -10,6 +10,7 @@ export function AppProvider({ children }) {
   const [portalPosterIndex, setPortalPosterIndex] = useState(0)
   const [chismeListening, setChismeListening] = useState(false)
   const [chismeActive, setChismeActive] = useState(false)
+  const [calienteActive, setCalienteActive] = useState(false)
   const [verticalHandActive, setVerticalHandActive] = useState(false)
 
   // Meme overlay
@@ -49,6 +50,8 @@ export function AppProvider({ children }) {
     setChismeListening,
     chismeActive,
     setChismeActive,
+    calienteActive,
+    setCalienteActive,
     activeMeme,
     setActiveMeme,
     currentGestureLabel,
