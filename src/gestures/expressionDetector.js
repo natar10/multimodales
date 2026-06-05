@@ -18,14 +18,14 @@ export const expressionDetector = {
     return eyesSquinted && browsDown && mouthClosed
   },
 
-  // Meme: boca muy abierta + sonrisa amplia (risa malévola)
+  // Meme: sonrisa natural con dientes (risa malévola)
   detectRisaMalevola(blendshapes) {
     if (!blendshapes || blendshapes.length === 0) return false
     const s = this._toMap(blendshapes)
-    const bigMouth   = (s['jawOpen'] || 0) > 0.5
-    const wideSmileL = (s['mouthSmileLeft']  || 0) > 0.35
-    const wideSmileR = (s['mouthSmileRight'] || 0) > 0.35
-    return bigMouth && wideSmileL && wideSmileR
+    const mouthOpen  = (s['jawOpen'] || 0) > 0.2
+    const wideSmileL = (s['mouthSmileLeft']  || 0) > 0.4
+    const wideSmileR = (s['mouthSmileRight'] || 0) > 0.4
+    return mouthOpen && wideSmileL && wideSmileR
   },
 
   // Meme: ambos ojos abiertos por encima de threshold (equivalente a cat_shock)
