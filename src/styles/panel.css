@@ -108,7 +108,9 @@
   justify-content: center;
   gap: 16px;
   width: 100vw;
-  height: 100vh;
+  height: calc(100vh - var(--gesture-bar-h));
+  padding: var(--stream-pad);
+  box-sizing: border-box;
   background: var(--color-bg);
   overflow: hidden;
 }

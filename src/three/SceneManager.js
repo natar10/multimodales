@@ -34,9 +34,9 @@ export class SceneManager {
   }
 
   init() {
-    // Dimensiones fijas desde .env (con fallback a ventana completa)
-    const canvasW = parseInt(import.meta.env.VITE_CANVAS_WIDTH)  || window.innerWidth
-    const canvasH = parseInt(import.meta.env.VITE_CANVAS_HEIGHT) || window.innerHeight
+    // Read dimensions from the container element (driven by CSS responsive variables)
+    const canvasW = this.container.clientWidth  || parseInt(import.meta.env.VITE_CANVAS_WIDTH)  || 854
+    const canvasH = this.container.clientHeight || parseInt(import.meta.env.VITE_CANVAS_HEIGHT) || 480
 
     // Renderer
     this.renderer = new THREE.WebGLRenderer({ antialias: true })

@@ -30,10 +30,16 @@
   --gap-md:  14px;
   --gap-lg:  20px;
 
-  /* Canvas — must match .env */
-  --canvas-width:  854px;
-  --canvas-height: 480px;
-  --panel-right-width: 340px;
+  /* Layout */
+  --gesture-bar-h:   116px;   /* height of the fixed bottom gesture bar */
+  --stream-pad:       10px;
+  --panel-right-width: 300px;
+
+  /* Canvas — fills viewport dynamically, 16:9 ratio */
+  --_cav-w: calc(100vw - var(--panel-right-width) - 16px - 2 * var(--stream-pad));
+  --_cav-h: calc(100vh - var(--gesture-bar-h) - 2 * var(--stream-pad));
+  --canvas-width:  min(var(--_cav-w), calc(var(--_cav-h) * 16 / 9));
+  --canvas-height: min(var(--_cav-h), calc(var(--_cav-w) * 9 / 16));
 
   /* Typography */
   --font-arcane: 'Cinzel Decorative', serif;
