@@ -4,6 +4,7 @@ import { HUDOverlay } from './HUDOverlay.jsx'
 import { MemeOverlay } from './MemeOverlay.jsx'
 import { CalienteOverlay } from './CalienteOverlay.jsx'
 import { ModalitiesPanel } from './ModalitiesPanel.jsx'
+import { GestureBar } from './GestureBar.jsx'
 import '../styles/panel.css'
 
 export function StreamLayout({ canvasRef }) {
@@ -16,6 +17,7 @@ export function StreamLayout({ canvasRef }) {
         <CalienteOverlay />
       </div>
       <ModalitiesPanel />
+      <GestureBar />
     </div>
   )
 }

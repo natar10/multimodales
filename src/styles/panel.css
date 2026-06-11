@@ -113,6 +113,46 @@
   overflow: hidden;
 }
 
+/* === Gesture Bar (effect thumbnails, full-width fixed bottom strip) === */
+.gesture-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 24px 12px;
+  background: rgba(10, 5, 18, 0.92);
+  border-top: 1px solid #eea94433;
+  backdrop-filter: blur(10px);
+  z-index: 50;
+  pointer-events: none;
+}
+
+.gesture-bubble {
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  border: 1.5px solid #eea94455;
+  overflow: hidden;
+  background: var(--color-panel-alt);
+  transition: border-color 0.25s, box-shadow 0.25s, transform 0.2s;
+}
+
+.gesture-bubble:hover {
+  border-color: #eea944cc;
+  box-shadow: 0 0 12px #eea94466, 0 0 4px #eea94433;
+  transform: scale(1.12);
+}
+
+.gesture-bubble-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 /* === Left panel: canvas wrapper + HUD === */
 .canvas-panel {
   position: relative;
